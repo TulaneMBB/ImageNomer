@@ -8,21 +8,25 @@
                 <span v-if="store.selected('fc')">({{ store.selected('fc').length }} selected)</span>
             </v-card-subtitle>
             <div id='fc-list-div'>
-                <v-lazy
-                    v-for="fc in filteredFC" 
-                    :key="fc.id">
-                    <v-checkbox 
-                        v-model="fc.selected" 
-                        :label="fc.fname" 
-                        dense
-                        hide-details 
-                        class="checkbox-dense">
-                    </v-checkbox>
-                </v-lazy>
+                <v-checkbox 
+                    v-for="fc in displayedFC" 
+                    :key="fc.id"
+                    v-model="fc.selected" 
+                    :label="fc.fname" 
+                    dense
+                    hide-details 
+                    class="checkbox-dense">
+                </v-checkbox>
             </div>
+            <v-pagination
+                    v-model='fcPage'
+                    :length="Math.ceil(filteredFC.length/NUM_FC_PAGE)"
+                    total-visible='1'>
+            </v-pagination>
             <v-text-field
                 label="Filter FCs"
                 v-model="search.fc"
+                @input="resetFcPagination()"
                 dense
                 hide-details
                 class='padded'
@@ -80,7 +84,9 @@ export default {
             loading: true,
             search: {fc: ''},
             query: '',
-            active: null
+            active: null,
+            fcPage: 0,
+            NUM_FC_PAGE: 20
         }
     },
     props: {
@@ -96,8 +102,16 @@ export default {
         }
     },
     computed: {
+        displayedFC() {
+            const fc = this.filteredFC;
+            return fc.slice(this.fcPage*this.NUM_FC_PAGE,(this.fcPage+1)*this.NUM_FC_PAGE);
+        },
         filteredFC() {
-            const fc = this.store.fc.filter(fc => fc.fname.includes(this.search['fc']));
+            const fc = this.store.fc.filter(fc => {
+                const keep = fc.fname.includes(this.search['fc']);
+                if (!keep && fc.selected) fc.selected = false;
+                return keep;
+            });
             return fc;
         }
     },
@@ -140,6 +154,9 @@ export default {
                 this.store.groups.push({query: this.query, subs: json});
             })
             .catch(err => alert(err));
+        },
+        resetFcPagination() {
+            this.fcPage = 0;
         },
         parseFC(fc) {
             fc.sort();

@@ -1,5 +1,16 @@
 import { defineStore } from 'pinia';
 
+function getFnameField(fname, field) {
+    let val = null;
+    fname.split('_').forEach(part => {
+        const pp = part.split('-');
+        if (pp.length == 2 && pp[0] == field) {
+            val = pp[1];
+        }
+    });
+    return val;
+}
+
 export const useCohortStore = defineStore("CohortStore", {
     state: () => {
         return {
@@ -48,6 +59,11 @@ export const useCohortStore = defineStore("CohortStore", {
                     return `male: ${m} female: ${f} (n=${vals.length})`
                 }
             }
+        },
+        tasks: (state) => {
+            const tasks = new Set();
+            state.fc.forEach(fc => tasks.add(getFnameField(fc.fname, 'task')));
+            return [...tasks];
         }
     },
     // actions

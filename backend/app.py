@@ -29,7 +29,7 @@ def index():
 
 '''List cohorts'''
 @app.route('/data/list', methods=(['GET']))
-def list():
+def ls():
     args = request.args
     task = args['task'] if 'task' in args else None
     return jsonify({'cohorts': cohort.ls_cohorts('anton')})
@@ -55,7 +55,7 @@ def group():
     query = args['query']
     demo = data.get_demo('anton', cohort)
     df = data.demo2df(demo)
-    group = data.make_group_query(df, query)
+    group = list(df.query(query).index)
     return jsonify(group)
 
 '''Get demographics graph'''
@@ -134,24 +134,37 @@ def corr_fc():
     if args_err:
         return args_err
     # Params
-    cohort = args['cohort']
+    coh = args['cohort']
     query = args['query']
     field = args['field']
     task = args['task'] if 'task' in args else None
     ses = args['ses'] if 'ses' in args else None
     remap = 'remap' in args
     # Load demographics 
-    demo = data.get_demo('anton', cohort)
+    demo = data.get_demo('anton', coh)
     df = data.demo2df(demo)
     # Load group
-    group = data.make_group_query(df, query) if query != 'All' else df.index
+    if query == 'All':
+        group = df.index
+        demo_field = df[field]
+    else:
+        qres = df.query(query)
+        group = list(qres.index)
+        demo_field =qres[field]
+    demo_field = list(demo_field)
     # Get FCs
     fcs = []
-    for sub in group:
-        fc = data.get_fc('anton', cohort, sub, task, ses)
-        fcs.append(fc)
+    if task is None:
+        tasks = cohort.get_tasks('anton', coh)
+        demo_field = len(tasks)*demo_field
+    else:
+        tasks = [task]
+    for task in tasks:
+        for sub in group:
+            fc = data.get_fc('anton', coh, sub, task, ses)
+            fcs.append(fc)
     cat = 'M' if field == 'sex' else None
-    rho = correlation.correlate_feat(fcs, df[field], cat=cat)
+    rho = correlation.correlate_feat(fcs, demo_field, cat=cat)
     rho = data.vec2mat(rho, fillones=False)
     if remap:
         rho = power.remap(rho)

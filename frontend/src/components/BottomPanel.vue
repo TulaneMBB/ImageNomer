@@ -11,7 +11,7 @@
             <v-row align='center' class='padded'>
                 <v-select 
                     v-model='group'
-                    cols='3'
+                    cols='2'
                     :items='store.groups' 
                     item-title='query' 
                     label='Group' 
@@ -19,16 +19,23 @@
                 </v-select>
                 <v-select 
                     v-model='feat'
-                    cols='3'
+                    cols='2'
                     :items='Object.keys(store.demo)' 
                     label='Demographic Feature' 
                     hide-details dense class='padded'>
                 </v-select>
                 <v-select 
                     v-model='respVar'
-                    cols='3'
+                    cols='2'
                     :items="Object.keys(store.demo).concat(['fc'])" 
                     label='Response Var' 
+                    hide-details dense class='padded'>
+                </v-select>
+                <v-select
+                    v-model='task'
+                    cols='2'
+                    :items='["All"].concat(store.tasks)'
+                    label='Task'
                     hide-details dense class='padded'>
                 </v-select>
                 <v-btn cols='2' @click='getCorr()' key='go' value='Go' class='padded-alt'>Go</v-btn>
@@ -46,7 +53,8 @@ export default {
         return {
             group: null,
             feat: null,
-            respVar: null
+            respVar: null,
+            task: null
         }
     },
     setup() {
@@ -57,8 +65,11 @@ export default {
     },
     methods: {
         getCorr() {
+            const taskPart = (this.task == 'All')
+                ? ''
+                : `&task=${this.task}`;
             const url = (this.respVar == 'fc') 
-                ? `/analysis/corr/fc?cohort=test&query=${this.group}&field=${this.feat}&task=rest&remap` 
+                ? `/analysis/corr/fc?cohort=test&query=${this.group}&field=${this.feat}${taskPart}&remap` 
                 : `/analysis/corr/demo?cohort=test&query=${this.group}&field1=${this.feat}&field2=${this.respVar}`;
             fetch(url)
             .then(resp => resp.json())

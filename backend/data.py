@@ -67,10 +67,10 @@ def make_group(df, col, val_or_range):
             val_or_range = f'"{val_or_range}"'
         query = f'select * from df where {col} = {val_or_range}'
     return ps.sqldf(query, locals())
-'''
 
 def make_group_query(df, query):
     return list(df.query(query).index)
+'''
 
 def flatten(lst):
     return [item for sublist in lst for item in sublist]

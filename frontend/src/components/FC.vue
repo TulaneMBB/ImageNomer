@@ -3,7 +3,7 @@
         <span v-if='loading'>Loading...</span>
         <span v-else-if='error'>{{ error }}</span>
         <div v-else>
-            <div>{{ sub }}, {{ task }}</div>
+            <div>{{ sub }}<br>{{ task }}</div>
             <img v-bind:src="'data:image/png;base64,'+imageData">
         </div>
     </div>
@@ -59,6 +59,8 @@ export default {
 .fc-div {
     display: inline-block;
     text-align: center;
+    font-size: smaller;
+    color: #444;
 }
 .fc-div img {
     width: 150px;

@@ -58,4 +58,7 @@ export default {
 .v-card {
     margin-bottom: 8px;
 }
+.no-display {
+    display: none;
+}
 </style>

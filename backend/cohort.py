@@ -1,5 +1,6 @@
 
 from pathlib import Path
+import re
 
 # Our modules
 import data
@@ -17,4 +18,11 @@ def get_cohort(user, cohort):
     if demo.exists():
         dat['demo'] = data.get_demo(user, cohort)
     return dat
+
+def get_tasks(user, cohort):
+    c = get_cohort(user, cohort)
+    tasks = set()
+    for fname in c['fc']:
+        tasks.add(re.match('.*task-([^_]+)', fname).group(1))
+    return list(tasks)
     

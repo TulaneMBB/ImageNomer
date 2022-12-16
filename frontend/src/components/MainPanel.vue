@@ -7,7 +7,8 @@
             <v-col cols='11' v-if='store.groups.filter(g => g.selected).length > 0'>
                 <v-pagination
                     v-model='page'
-                    :length="Math.round(store.groupSelected('fc').length/NUM_FC_PAGE)">
+                    :length="Math.ceil(store.groupSelected('fc').length/NUM_FC_PAGE)"
+                    total-visible='5'>
                 </v-pagination>
                 <FC 
                     v-for="fc in filteredGroupFC"

@@ -1,11 +1,5 @@
 # frontend
 
-```
-vue build
-```
-
-<div style='color: red'>build for development, can use Firefox Vue extension to debug</div>
-
 ## Project setup
 ```
 npm install
