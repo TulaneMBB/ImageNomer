@@ -8,6 +8,8 @@ import data
 import image
 import cohort
 import correlation
+import session
+import image_math
 
 app = Flask(__name__,
     template_folder='../dist',
@@ -163,12 +165,34 @@ def corr_fc():
         for sub in group:
             fc = data.get_fc('anton', coh, sub, task, ses)
             fcs.append(fc)
+    # Get correlation
     cat = 'M' if field == 'sex' else None
     rho = correlation.correlate_feat(fcs, demo_field, cat=cat)
     rho = data.vec2mat(rho, fillones=False)
     if remap:
         rho = power.remap(rho)
+    # Save correlation for image math
+    id = session.get_id()
+    session.save(id, rho)
+    # Send image
     img = image.imshow(rho, colorbar=True)
+    return jsonify({'data': img, 'id': id})
+
+'''Perform image math'''
+@app.route('/math/image', methods=(['GET']))
+def imgmath():
+    args = request.args
+    # Optional: task, session
+    args_err = validate_args(['expr'], args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    expr = args['expr']
+    try:
+        res = image_math.eval(expr)
+    except err:
+        return error(err)
+    img = image.imshow(res, colorbar=True)
     return jsonify({'data': img})
 
 if __name__ == '__main__':

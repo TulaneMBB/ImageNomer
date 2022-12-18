@@ -11,7 +11,6 @@
             <v-row align='center' class='padded'>
                 <v-select 
                     v-model='group'
-                    cols='2'
                     :items='store.groups' 
                     item-title='query' 
                     label='Group' 
@@ -19,27 +18,52 @@
                 </v-select>
                 <v-select 
                     v-model='feat'
-                    cols='2'
                     :items='Object.keys(store.demo)' 
                     label='Demographic Feature' 
                     hide-details dense class='padded'>
                 </v-select>
                 <v-select 
                     v-model='respVar'
-                    cols='2'
                     :items="Object.keys(store.demo).concat(['fc'])" 
                     label='Response Var' 
                     hide-details dense class='padded'>
                 </v-select>
                 <v-select
                     v-model='task'
-                    cols='2'
-                    :items='["All"].concat(store.tasks)'
+                    :items='["All"].concat(store.tasks("fc"))'
                     label='Task'
                     hide-details dense class='padded'>
                 </v-select>
-                <v-btn cols='2' @click='getCorr()' key='go' value='Go' class='padded-alt'>Go</v-btn>
+                <v-btn @click='getCorr()' key='go' value='Go' class='padded-alt'>Go</v-btn>
             </v-row>
+        </v-card>
+        <v-card 
+            title='Image Math' 
+            subtitle='Perform operations on images, e.g., correlation images'
+            v-if='store.saved.filter(item => item.type == "corr").length > 0'
+        >
+            <v-row
+                align='center' 
+                class='padded'>
+                <v-text-field
+                    label='Expression (e.g. "A-B", "std(A,BA,C)")'
+                    v-model='expr'
+                    hide-details dense class='padded'>
+                </v-text-field>
+                <v-btn @click='doImageMath()' key='go' value='Go' class='padded-alt'>Go</v-btn>
+            </v-row>
+            <h3>Images</h3>
+            <div class='checkbox-list-wrapper'>
+                <v-checkbox 
+                    v-for="item in store.saved.filter(item => item.type == 'corr')" 
+                    :key="item.num" 
+                    v-model="item.selected" 
+                    :label="item.label"
+                    dense
+                    hide-details 
+                    class="checkbox-dense">
+                </v-checkbox>
+            </div>
         </v-card>
     </v-container>
 </template>
@@ -54,7 +78,8 @@ export default {
             group: null,
             feat: null,
             respVar: null,
-            task: null
+            task: null,
+            expr: ''
         }
     },
     setup() {
@@ -64,6 +89,20 @@ export default {
         }
     },
     methods: {
+        doImageMath() {
+            fetch(`/math/image?expr=${encodeURIComponent(this.expr)}`)
+            .then(resp => resp.json())
+            .then(json => {
+                this.loading = false;
+                if (json.err) {
+                    this.error = json.err;
+                    return;
+                }
+                this.store.corr = json.data;
+                this.store.display = "corr";
+            })
+            .catch(err => this.error = err);
+        },
         getCorr() {
             const taskPart = (this.task == 'All')
                 ? ''
@@ -80,6 +119,15 @@ export default {
                     return;
                 }
                 this.store.corr = json.data;
+                if (this.respVar == 'fc') {
+                    this.store.saved.push(
+                        {
+                            type: 'corr', 
+                            label: `(${json.id}) group: ${this.group}, feat: ${this.feat}, task: ${this.task}`, 
+                            data: json.data, 
+                            id: json.id,
+                        });
+                }
                 this.store.display = "corr";
             })
             .catch(err => this.error = err);
@@ -89,7 +137,7 @@ export default {
 </script>
 
 <style scoped>
-#correlation {
+/*#correlation {
     max-width: 800px;
-}
+}*/
 </style>

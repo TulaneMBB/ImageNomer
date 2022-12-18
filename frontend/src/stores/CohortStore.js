@@ -20,18 +20,22 @@ export const useCohortStore = defineStore("CohortStore", {
             groups: [],
             display: null,
             corr: null,
+            saved: [],
+            labels: {}
         };
     },
     getters: {
         groupSelected: (state) => {
-            return (type) => {
+            return (type, task) => {
                 let num = 0;
                 return state[type].filter(item => {
                     const groups = state['groups'];
                     for (let i=0; i<groups.length; i++) {
                         if (groups[i].selected && groups[i].subs.indexOf(item.sub) != -1) {
-                            item.num = num++;
-                            return true;
+                            if (!task || task == 'All' || getFnameField(item.fname, "task") == task) {
+                                item.num = num++;
+                                return true;
+                            }
                         }
                     }
                     return false;
@@ -61,9 +65,11 @@ export const useCohortStore = defineStore("CohortStore", {
             }
         },
         tasks: (state) => {
-            const tasks = new Set();
-            state.fc.forEach(fc => tasks.add(getFnameField(fc.fname, 'task')));
-            return [...tasks];
+            return (field) => {
+                const tasks = new Set();
+                state[field].forEach(item => tasks.add(getFnameField(item.fname, 'task')));
+                return [...tasks];
+            };
         }
     },
     // actions

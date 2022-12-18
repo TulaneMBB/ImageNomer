@@ -1,6 +1,8 @@
 
 import numpy as np
 
+saved = dict()
+
 def correlate_feat(feats, var, cat=None):
     if cat is not None:
         var = [1 if item == cat else 0 for item in var]

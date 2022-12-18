@@ -3,37 +3,43 @@
         <span v-if='loading'>Loading...</span>
         <span v-else-if='error'>{{ error }}</span>
         <div v-else>
-            <div>{{ sub }}<br>{{ task }}</div>
+            <p><span v-for='field in display' :key='field.num'>{{field.label}}<br></span></p>
             <img v-bind:src="'data:image/png;base64,'+imageData">
         </div>
     </div>
 </template>
 
 <script>
+import { useCohortStore } from "@/stores/CohortStore";
+
 export default {
     name: 'FC',
     data() {
         return {
             imageData: '',
             loading: true,
-            error: false
+            error: false,
+            label: ''
+        }
+    },
+    computed: {
+        display() {
+            let num = 0;
+            return Object.keys(this.store.labels).filter(field => this.store.labels[field]).map(field => {
+                let label;
+                if (field == 'ID') {
+                    label = this.sub;
+                } else if (field == 'Task') {
+                    label = this.task;
+                } else {
+                    label = `${field}: ${this.store.demo[field][this.sub]}`;
+                }
+                return {num: num++, label};
+            });
         }
     },
     created() {
         this.fetchFcImage();
-    },
-    props: {
-        cohort: String,
-        sub: String,
-        task: String,
-        remap: {
-            type: Boolean,
-            default: false
-        },
-        colorbar: {
-            type: Boolean,
-            default: true
-        }
     },
     methods: {
         fetchFcImage() {
@@ -51,7 +57,26 @@ export default {
             })
             .catch(err => this.error = err);
         }
-    }
+    },
+    props: {
+        cohort: String,
+        sub: String,
+        task: String,
+        remap: {
+            type: Boolean,
+            default: false
+        },
+        colorbar: {
+            type: Boolean,
+            default: true
+        }
+    },
+    setup() {
+        const store = useCohortStore();
+        return {
+            store
+        }
+    },
 }
 </script>
 
