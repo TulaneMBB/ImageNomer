@@ -12,13 +12,6 @@ def tobase64(fig):
     buf.seek(0)
     return base64.b64encode(buf.read()).decode()
 
-def imshow_private(fc, colorbar=True):
-    fig, ax = plt.subplots()
-    im = ax.imshow(fc)
-    if colorbar:
-        fig.colorbar(mappable=im, ax=ax)
-    return tobase64(fig)
-
 def mp_wrap(f, *args):
     q = mp.Queue()
     def wrapper(q, *args):
@@ -36,6 +29,13 @@ def histogram(ys, ylabels, bins=20, density=True):
         ax.hist(y, label=lab, bins=bins, histtype='step')
     ax.legend()
     return tobase64(fig)
+
+def imshow_private(fc, colorbar=True):
+    fig, ax = plt.subplots()
+    im = ax.imshow(fc)
+    if colorbar:
+        fig.colorbar(mappable=im, ax=ax)
+    return tobase64(fig)
     
 def groups_hist_private(df, groups, field):
     ys = []
@@ -44,7 +44,6 @@ def groups_hist_private(df, groups, field):
         ylabels.append(group)
         ys.append(df.loc[groups[group], field])
     return histogram(ys, ylabels)
-
 
 def scatter_private(var1, var2, name1, name2):
     fig, ax = plt.subplots()
@@ -61,6 +60,18 @@ def violin_private(data, labels, field):
     ax.set_ylabel(field)
     return tobase64(fig)
 
+def plot_private(data, labels=None):
+    fig, ax = plt.subplots()
+    if isinstance(data, list):
+        if labels is None:
+            labels = len(data)*[None]
+        for d,lab in zip(data, labels):
+            ax.plot(d, label=lab)
+    else:
+        ax.plot(data)
+    ax.legend()
+    return tobase64(fig)
+
 # Weird stuff with matplotlib and multithreading? crashes the process
 # Can fix with mutliprocessing
 def imshow(fc, colorbar=True):
@@ -74,3 +85,6 @@ def scatter(var1, var2, name1, name2):
 
 def violin(data, labels, field):
     return mp_wrap(violin_private, data, labels, field)
+
+def plot(data, labels):
+    return mp_wrap(plot_private, data, labels)

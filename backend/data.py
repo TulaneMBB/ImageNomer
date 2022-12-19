@@ -3,7 +3,28 @@
 import numpy as np
 import pickle
 import pandas as pd
-import pandasql as ps
+import sys
+# import pandasql as ps
+
+class Features:
+    def __init__(self, w, b, subs, desc):
+        self.w = self.to_numpy(w)
+        self.b = self.to_numpy(b)
+        self.subs = subs
+        self.desc = desc
+        # self.vec2mat = vec2mat
+        
+    def to_numpy(self, data):
+        if isinstance(data, torch.Tensor):
+            return data.detach().cpu().numpy()
+        elif isinstance(data, numpy.ndarray):
+            return data
+        else:
+            raise TypeError(data)
+            
+    def save(self, fname):
+        with open(fname, 'wb') as f:
+            pickle.dump(self, f)
 
 def vec2mat(fc, fillones=True):
     n = len(fc)
@@ -33,6 +54,13 @@ def get_demo(user, cohort, file=False):
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
+def get_feat(user, cohort, fname):
+    # Hack for python's module structure
+    sys.modules['__main__'].Features = Features
+    fname = f'data/{user}/cohorts/{cohort}/features/{fname}'
+    with open(fname, 'rb') as f:
+        return pickle.load(f)
+
 '''
 Combine all vars into one dict
 Then create a DataFrame
@@ -55,23 +83,7 @@ def demo2df(demo):
             dct[col][sub2idx[sub]] = val
     # Create DataFrame
     return pd.DataFrame(dct, index=subs)
-    
-'''
-def make_group(df, col, val_or_range):
-    if isinstance(val_or_range, tuple):
-        # Range
-        valmin, valmax = val_or_range
-        query = f'select * from df where {col} >= {valmin} and {col} <= {valmax}'
-    else:
-        if isinstance(val_or_range, str):
-            val_or_range = f'"{val_or_range}"'
-        query = f'select * from df where {col} = {val_or_range}'
-    return ps.sqldf(query, locals())
 
-def make_group_query(df, query):
-    return list(df.query(query).index)
-'''
-
-def flatten(lst):
-    return [item for sublist in lst for item in sublist]
+# def flatten(lst):
+#     return [item for sublist in lst for item in sublist]
     

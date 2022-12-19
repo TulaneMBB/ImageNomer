@@ -39,6 +39,9 @@
                 </FC>
             </div>
         </div>
+        <div v-else-if='store.display == "feats"'>
+            <FeaturesPanel></FeaturesPanel>
+        </div>
         <div v-else v-for='field in Object.keys(store.demo)' :key='field'>
             <Demographics v-if='store.display == field' cohort='test' :field='store.display'/>
         </div>
@@ -50,6 +53,7 @@
 import FC from './FC.vue'
 import { useCohortStore } from "@/stores/CohortStore";
 import Demographics from './Demographics.vue';
+import FeaturesPanel from './FeaturesPanel.vue';
 
 export default {
     name: 'MainPanel',
@@ -62,9 +66,10 @@ export default {
         }
     },
     components: {
-        FC,
-        Demographics
-    },
+    FC,
+    Demographics,
+    FeaturesPanel
+},
     computed: {
         filteredGroupFC() {
             const fcs = this.store.groupSelected('fc', this.task);

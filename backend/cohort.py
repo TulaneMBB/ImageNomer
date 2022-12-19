@@ -12,11 +12,14 @@ def get_cohort(user, cohort):
     p = Path(f'data/{user}/cohorts/{cohort}')
     fc = p/'fc'
     demo = p/'demographics.pkl'
+    feats = p/'features'
     dat = {}
     if fc.is_dir():
         dat['fc'] = [f.name for f in fc.iterdir() if not f.is_dir()]
     if demo.exists():
         dat['demo'] = data.get_demo(user, cohort)
+    if feats.is_dir():
+        dat['feats'] = sorted([f.name for f in feats.iterdir() if not f.is_dir()])
     return dat
 
 def get_tasks(user, cohort):

@@ -5,6 +5,9 @@
                 {{ field }}
             </v-btn>
             <v-btn key='fc' value='fc'>FC</v-btn>
+            <v-btn key='fmri' value='fmri'>fMRI</v-btn>
+            <v-btn key='smri' value='smri'>sMRI</v-btn>
+            <v-btn key='feats' value='feats'>Features</v-btn>
         </v-btn-toggle>
         <v-card title='Correlation' id='correlation'>
             <v-card-subtitle>Find correlation between demographic features and FC for group</v-card-subtitle>

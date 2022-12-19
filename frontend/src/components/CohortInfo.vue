@@ -130,9 +130,9 @@ export default {
                 }
                 this.store.fc = this.parseFC(json.fc);
                 this.store.demo = json.demo;
-                const subs = this.getSubs(json.demo);
-                this.store.subs = subs;
-                this.store.groups = [{query: 'All', subs: [...subs]}];
+                this.store.subs = this.getSubs(json.demo);
+                this.store.feats = json.feats;
+                this.store.groups = [{query: 'All', subs: this.store.subs}];
             })
             .catch(err => this.error = err);
         },
@@ -141,7 +141,7 @@ export default {
             for (let key in demo) {
                 Object.keys(demo[key]).forEach(sub => subs.add(sub));
             }
-            return subs;
+            return [...subs];
         },
         makeGroup() {
             fetch(`/data/group?cohort=${this.cohort}&query=${this.query}`)

@@ -78,7 +78,7 @@ def demo_hist():
     img = image.groups_hist(df, groups, field)
     return jsonify({'data': img})
 
-'''Get or post subject FC'''
+'''Get subject FC'''
 @app.route('/data/fc', methods=(['GET']))
 def fc():
     args = request.args
@@ -101,6 +101,7 @@ def fc():
     img = image.imshow(fc, colorbar)
     return jsonify({'data': img})
 
+'''Get images of one demographic feature correlated with another'''
 @app.route('/analysis/corr/demo', methods=(['GET']))
 def corr_demo():
     args = request.args
@@ -194,6 +195,26 @@ def imgmath():
         return error(err)
     img = image.imshow(res, colorbar=True)
     return jsonify({'data': img})
+
+'''Get feature data'''
+@app.route('/data/feature', methods=(['GET']))
+def feature():
+    args = request.args
+    args_err = validate_args(['cohort', 'fname', 'remap'], args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    fname = args['fname']
+    remap = 'remap' in args
+    # Get feature
+    feat = data.get_feat('anton', coh, fname)
+    w = data.vec2mat(feat.w, fillones=False) #if feat.vec2mat else feat.w
+    b = float(feat.b) # TODO
+    if remap:
+        w = power.remap(w)
+    img = image.imshow(w)
+    return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'b': b})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
