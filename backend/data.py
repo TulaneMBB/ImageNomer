@@ -61,6 +61,17 @@ def get_feat(user, cohort, fname):
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
+def get_stats(typ, user, cohort, fnames):
+    imgs = []
+    for fname in fnames:
+        path = f'data/{user}/cohorts/{cohort}/fc/{fname}'
+        img = np.load(path)
+        imgs.append(img)
+    imgs = np.stack(imgs)
+    match typ:
+        case 'mean': return np.mean(imgs, axis=0)
+        case 'std': return np.std(imgs, axis=0)
+
 '''
 Combine all vars into one dict
 Then create a DataFrame

@@ -2,7 +2,7 @@
     <div v-if="loading">Loading...</div>
     <div v-else-if="error">{{ error }}</div>
     <div v-else>
-        <v-card title='FC'>
+        <v-card title='FC' class='mb-2'>
             <v-card-subtitle>
                 {{ store.fc.length }} FCs 
                 <span v-if="store.selected('fc')">({{ store.selected('fc').length }} selected)</span>
@@ -15,13 +15,14 @@
                     :label="fc.fname" 
                     dense
                     hide-details 
-                    class="checkbox-dense">
+                    class="mb-n7">
                 </v-checkbox>
             </div>
             <v-pagination
                     v-model='fcPage'
                     :length="Math.ceil(filteredFC.length/NUM_FC_PAGE)"
-                    total-visible='1'>
+                    total-visible='1'
+                    class='pt-4 mb-n2'>
             </v-pagination>
             <v-text-field
                 label="Filter FCs"
@@ -29,36 +30,32 @@
                 @input="resetFcPagination()"
                 dense
                 hide-details
-                class='padded'
+                class='pa-4 pb-2'
             ></v-text-field>
         </v-card>
-        <v-card title='Demographics'>
+        <v-card title='Demographics' class='mb-2'>
             <v-card-text>
                 <div v-for="field in Object.keys(store.demo)" :key="field">
                     <strong>{{ field }}</strong> {{ store.summary(field) }}
                 </div>
             </v-card-text>
         </v-card>
-        <v-card title='Groups'>
+        <v-card title='Groups' class='mb-2'>
             <v-card-subtitle>
                 Create groups based on demographics<br>
                 e.g., "age &gt; 180 and age &lt; 240"
             </v-card-subtitle>
             <v-row align='center'>
-                <v-col cols='8'>
-                    <v-text-field
-                        label="Group Query"
-                        v-model="query"
-                        dense
-                        hide-details
-                        class='padded'
-                    ></v-text-field>
-                </v-col>
-                <v-col cols='4'>
-                    <v-btn @click='makeGroup' class='padded-alt'>Create</v-btn>
-                </v-col>
+                <v-text-field
+                    label="Group Query"
+                    v-model="query"
+                    dense
+                    hide-details
+                    class='ma-4 mr-2'
+                ></v-text-field>
+                <v-btn @click='makeGroup' class='mr-6'>Create</v-btn>
             </v-row>
-            <div class='checkbox-list-wrapper'>
+            <div class='pb-6'>
                 <v-checkbox 
                     v-for="group in store.groups" 
                     :key="group.query" 
@@ -66,7 +63,7 @@
                     :label="`${group.query} (${group.subs.length})`" 
                     dense
                     hide-details 
-                    class="checkbox-dense">
+                    class="mb-n7">
                 </v-checkbox>
             </div>
         </v-card>
@@ -86,7 +83,7 @@ export default {
             query: '',
             active: null,
             fcPage: 0,
-            NUM_FC_PAGE: 20
+            NUM_FC_PAGE: 6
         }
     },
     props: {
@@ -180,8 +177,8 @@ export default {
 </script>
 
 <style scoped>
-#fc-list-div {
+/* #fc-list-div {
     max-height: 160px;
     overflow-y: scroll;
-}
+} */
 </style>

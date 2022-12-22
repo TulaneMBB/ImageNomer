@@ -216,5 +216,29 @@ def feature():
     img = image.imshow(w)
     return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'b': b})
 
+'''Get statistics image (mean or standard deviation)'''
+@app.route('/analysis/stats', methods=(['POST']))
+def stats():
+    args = request.form
+    args_err = validate_args(['type', 'cohort', 'fnames', 'remap'], args, request.url)
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    typ = args['type']
+    fnames = json.loads(args['fnames'])
+    remap = 'remap' in args
+    # Get FC images and calculate stat
+    res = data.get_stats(typ, 'anton', coh, fnames)
+    mat = data.vec2mat(res, typ == 'mean')
+    if remap:
+       mat = power.remap(mat)
+    # Save in cache
+    id = session.get_id()
+    session.save(id, mat)
+    # Display and send to frontend
+    img = image.imshow(mat) 
+    return jsonify({'data': img, 'id': id})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)

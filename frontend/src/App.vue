@@ -8,12 +8,11 @@
             </v-col>
             <v-col>
                 <v-container>
-                    <v-row>
-                        <MainPanel/>
-                    </v-row>
-                    <v-row>
-                        <BottomPanel/>
-                    </v-row>
+                    <DisplayButtonsPanel></DisplayButtonsPanel>
+                    <MainPanel/>
+                    <CorrelationPanel></CorrelationPanel>
+                    <ImageMathPanel></ImageMathPanel>
+                    <!-- <BottomPanel/> -->
                 </v-container>
             </v-col>
         </v-row>
@@ -22,19 +21,25 @@
 </template>
 
 <script>
-import SidePanel from './components/SidePanel.vue'
-import MainPanel from './components/MainPanel.vue'
-import BottomPanel from './components/BottomPanel.vue'
-import TopPanel from './components/TopPanel.vue'
+import SidePanel from './components/SidePanel.vue';
+import MainPanel from './components/MainPanel.vue';
+// import BottomPanel from './components/BottomPanel.vue';
+import TopPanel from './components/TopPanel.vue';
+import DisplayButtonsPanel from './components/DisplayButtonsPanel.vue';
+import ImageMathPanel from './components/ImageMathPanel.vue';
+import CorrelationPanel from './components/CorrelationPanel.vue';
 
 export default {
     name: 'App',
     components: {
-    SidePanel,
-    MainPanel,
-    BottomPanel,
-    TopPanel
-}
+        SidePanel,
+        MainPanel,
+        // BottomPanel,
+        TopPanel,
+        DisplayButtonsPanel,
+        ImageMathPanel,
+        CorrelationPanel
+    }
 }
 </script>
 
@@ -42,21 +47,6 @@ export default {
 .v-main {
     font-size: 14px;
     padding: 20px;
-}
-.checkbox-dense {
-    height: 24px;
-}
-.checkbox-list-wrapper {
-    padding-bottom: 20px;
-}
-.padded {
-    margin: 8px;
-}
-.padded-alt {
-    padding: 8px;
-}
-.v-card {
-    margin-bottom: 8px;
 }
 .no-display {
     display: none;

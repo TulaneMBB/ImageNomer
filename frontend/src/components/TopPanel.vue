@@ -1,7 +1,7 @@
 <template>
-    <v-card style='padding-bottom: 8px;'>
-        <v-card-title>{{ cohort }} cohort</v-card-title>
-        <v-card-subtitle>{{ store.subs.size }} subjects</v-card-subtitle>
+    <v-card class='mb-4'>
+        <v-card-title>ImageNomer</v-card-title>
+        <v-card-subtitle>{{ cohort }} cohort {{ store.subs.length }} subjects</v-card-subtitle>
     </v-card>
 </template>
 
