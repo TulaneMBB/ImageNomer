@@ -12,8 +12,8 @@
     "core-js": "^3.8.3",
     "pinia": "^2.0.27",
     "roboto-fontface": "*",
-    "vue": "^3.2.13",
-    "vuetify": "^3.0.0-beta.0",
+    "vue": "^3.2.45",
+    "vuetify": "^3.0.6",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {

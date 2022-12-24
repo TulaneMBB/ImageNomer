@@ -26,9 +26,12 @@ class Features:
         with open(fname, 'wb') as f:
             pickle.dump(self, f)
 
-def vec2mat(fc, fillones=True):
+def d_from_vec(fc):
     n = len(fc)
-    d = int(round((1+(1+8*n)**0.5)/2))
+    return int(round((1+(1+8*n)**0.5)/2))
+
+def vec2mat(fc, fillones=True):
+    d = d_from_vec(fc)
     a,b = np.triu_indices(d,1)
     mat = np.zeros((d,d))
     mat[a,b] = fc
@@ -71,6 +74,15 @@ def get_stats(typ, user, cohort, fnames):
     match typ:
         case 'mean': return np.mean(imgs, axis=0)
         case 'std': return np.std(imgs, axis=0)
+
+def get_top(data, n=20, rank='abs'):
+    match rank:
+        case 'abs': idcs = np.argsort(np.abs(data))
+        case 'pos': idcs = np.argsort(data)
+        case 'neg': idcs = np.argsort(-data)
+    if n > len(idcs):
+        n = len(idcs)
+    return data[idcs[-1:-n:-1]], idcs[-1:-n:-1]
 
 '''
 Combine all vars into one dict

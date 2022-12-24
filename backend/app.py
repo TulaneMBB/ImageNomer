@@ -173,8 +173,7 @@ def corr_fc():
     if remap:
         rho = power.remap(rho)
     # Save correlation for image math
-    id = session.get_id()
-    session.save(id, rho)
+    id = session.save(rho)
     # Send image
     img = image.imshow(rho, colorbar=True)
     return jsonify({'data': img, 'id': id})
@@ -196,7 +195,7 @@ def imgmath():
     img = image.imshow(res, colorbar=True)
     return jsonify({'data': img})
 
-'''Get feature data'''
+''' Get feature data '''
 @app.route('/data/feature', methods=(['GET']))
 def feature():
     args = request.args
@@ -213,8 +212,33 @@ def feature():
     b = float(feat.b) # TODO
     if remap:
         w = power.remap(w)
+    # Save feature
+    id = session.save(w)
     img = image.imshow(w)
-    return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'b': b})
+    return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'b': b, 'id': id})
+
+''' Bar graph of top values '''
+@app.route('/image/top', methods=(['GET']))
+def imgtop():
+    args = request.args
+    # Optional ntop, rank, labtype
+    args_err = validate_args(['id'], args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    id = args['id']
+    ntop = int(args['ntop']) if 'ntop' in args else 20
+    rank = args['rank'] if 'rank' in args else 'abs'
+    labtype = args['labtype'] if 'labtype' in args else 'raw'
+    # Load from session
+    datimg = session.load(id) # Save fname for loading instead of img TODO
+    datimg = data.mat2vec(datimg)
+    # Get top features
+    vec, idcs = data.get_top(datimg, n=ntop, rank=rank)
+    labels = power.label(idcs, labtype)
+    # Draw image
+    img = image.bar(vec, labels)
+    return jsonify({'data': img})
 
 '''Get statistics image (mean or standard deviation)'''
 @app.route('/analysis/stats', methods=(['POST']))
@@ -234,8 +258,7 @@ def stats():
     if remap:
        mat = power.remap(mat)
     # Save in cache
-    id = session.get_id()
-    session.save(id, mat)
+    id = session.save(mat)
     # Display and send to frontend
     img = image.imshow(mat) 
     return jsonify({'data': img, 'id': id})

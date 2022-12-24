@@ -1,9 +1,8 @@
 <template>
-    <v-container fluid>
         <div v-if='savedImageType(store.display)'>
             <img v-bind:src="'data:image/png;base64,'+store.corr">
         </div>
-        <div v-if='store.display == "fc"'>
+        <div v-else-if='store.display == "fc"'>
             <div v-if='store.groups.filter(g => g.selected).length > 0'>
                 <v-card subtitle='Display Options'>
                     <v-select
@@ -50,7 +49,6 @@
         <div v-else v-for='field in Object.keys(store.demo)' :key='field'>
             <Demographics v-if='store.display == field' cohort='test' :field='store.display'/>
         </div>
-    </v-container>
 </template>
 
 <script>

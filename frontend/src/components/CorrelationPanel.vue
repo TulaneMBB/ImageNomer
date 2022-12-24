@@ -1,5 +1,5 @@
 <template>
-    <v-card title='Correlation' class='mb-4'>
+    <v-card title='Correlation' class='mb-2'>
         <v-card-subtitle>Find correlation between demographic features and FC for group</v-card-subtitle>
         <v-row align='center' class='pa-4 pt-3 pb-3 ma-0'>
             <v-select 
@@ -27,7 +27,7 @@
                 label='Task'
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
-            <v-btn @click='getCorr()' key='go' value='Go' class='ma-4'>Go</v-btn>
+            <v-btn @click='getCorr()' key='go' value='Go' class='ml-4 mr-0'>Go</v-btn>
         </v-row>
     </v-card>
 </template>

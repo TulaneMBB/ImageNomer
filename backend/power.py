@@ -1,5 +1,7 @@
 '''Power ROI functions'''
 
+import numpy as np
+
 ours2orig = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 
 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 254, 41, 42, 43, 44, 45, 
 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 
@@ -18,7 +20,36 @@ ours2orig = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
 9, 10, 11, 83, 84, 131, 139, 140, 141, 181, 182, 183, 184, 246, 247, 248, 
 249, 252, 253]
 
+def make_fn_map(bounds):
+    fnidx = 0
+    bmap = dict()
+    for i in range(264):
+        if i >= bounds[fnidx]:
+            fnidx += 1
+        bmap[i] = fnidx
+    return bmap
+
+bounds = [30, 35, 49, 62, 120, 125, 156, 181, 199, 212, 221, 232, 236, 264]
+fn_map = make_fn_map(bounds)
+
+fn_names = 'SMT,SMH,CNG,AUD,DMN,MEM,VIS,FRNT,SAL,SUB,VATN,DATN,CB,UNK'.split(',')
+fn_names_map = {idx: fn_names[fn] for idx,fn in fn_map.items()}
+
+rois_a, rois_b = np.triu_indices(264,1)
+
 def remap(fc, roimap=ours2orig):
     fc = fc[roimap,:]
     fc = fc[:,roimap]
     return fc
+
+def label(idcs, labtype='raw'):
+    if labtype == 'raw':
+        return [str(idx) for idx in idcs]
+    if labtype == 'rois':
+        return [f'{rois_a[idx]}-{rois_b[idx]}' for idx in idcs]
+    if labtype == 'fns':
+        fns = []
+        for idx in idcs:
+            a, b = rois_a[idx], rois_b[idx]
+            fns.append(f'{fn_names_map[a]}-{fn_names_map[b]}')
+        return fns

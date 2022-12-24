@@ -60,17 +60,24 @@ def violin_private(data, labels, field):
     ax.set_ylabel(field)
     return tobase64(fig)
 
-def plot_private(data, labels=None):
+def bar_private(data, labels):
     fig, ax = plt.subplots()
-    if isinstance(data, list):
-        if labels is None:
-            labels = len(data)*[None]
-        for d,lab in zip(data, labels):
-            ax.plot(d, label=lab)
-    else:
-        ax.plot(data)
-    ax.legend()
+    x = np.arange(len(data))
+    ax.bar(x, height=data, tick_label=labels)
+    ax.tick_params(axis='x', labelrotation=-60)
     return tobase64(fig)
+
+# def plot_private(data, labels=None):
+#     fig, ax = plt.subplots()
+#     if isinstance(data, list):
+#         if labels is None:
+#             labels = len(data)*[None]
+#         for d,lab in zip(data, labels):
+#             ax.plot(d, label=lab)
+#     else:
+#         ax.plot(data)
+#     ax.legend()
+#     return tobase64(fig)
 
 # Weird stuff with matplotlib and multithreading? crashes the process
 # Can fix with mutliprocessing
@@ -86,5 +93,8 @@ def scatter(var1, var2, name1, name2):
 def violin(data, labels, field):
     return mp_wrap(violin_private, data, labels, field)
 
-def plot(data, labels):
-    return mp_wrap(plot_private, data, labels)
+def bar(data, labels):
+    return mp_wrap(bar_private, data, labels)
+
+# def plot(data, labels):
+#     return mp_wrap(plot_private, data, labels)
