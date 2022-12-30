@@ -21,6 +21,7 @@ export const useCohortStore = defineStore("CohortStore", {
             groups: [],
             display: null,
             corr: null,
+            p: null,
             saved: [],
             labels: {}
         };

@@ -1,6 +1,10 @@
 <template>
-        <div v-if='savedImageType(store.display)'>
+        <div v-if='store.display == "corr" || store.display == "stats"'>
             <img v-bind:src="'data:image/png;base64,'+store.corr">
+        </div>
+        <div v-else-if='store.display == "fc-corr"'>
+            <img v-bind:src="'data:image/png;base64,'+store.corr">
+            <img v-bind:src="'data:image/png;base64,'+store.p">
         </div>
         <div v-else-if='store.display == "fc"'>
             <div v-if='store.groups.filter(g => g.selected).length > 0'>

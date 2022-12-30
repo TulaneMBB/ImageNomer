@@ -25,6 +25,29 @@
             </v-radio-group>
             <v-slider label='Number' min='3' max='50' step='1' @change='getTop()' v-model='ntop'>
             </v-slider>
+            <v-col align='center' justify='center'>
+                <v-select
+                    label='Group'
+                    v-model='group'
+                    :items='["All"].concat(this.store.groups)'
+                    :change='getTop()'
+                    dense
+                    class='ma-0 ml-4 mr-4 pa-0'>
+                </v-select>
+                <v-select
+                    label='Input Task'
+                    v-model='task'
+                    :items='["All"].concat(this.store.tasks("fc"))'
+                    :change='getTop()'
+                    dense
+                    class='ma-0 ml-4 mr-4 pa-0'>
+                </v-select>
+                <v-checkbox 
+                    v-model='mult' 
+                    @change='getTop()'>
+                    Multiply
+                </v-checkbox>
+            </v-col>
         </v-row>
         <div v-if='fname' class='text-h6 text-center ml-4'>
             <div>{{ desc }}</div>
@@ -49,19 +72,23 @@ export default {
             desc: '',
             nsubs: 0,
             w: null,
-            b: null,
             id: null,
             topdata: null,
             labtype: 'raw',
             rank: 'abs',
             ntop: 10,
+            group: "All",
+            task: "All",
+            mult: false,
         }
     },
     methods: {
+        alert(stuff) {
+            console.log(stuff);
+        },
         getTop() {
-            console.log(this.labtype);
             this.loading = true;
-            fetch(`/image/top?id=${this.id}&ntop=${this.ntop}&rank=${this.rank}&labtype=${this.labtype}`)
+            fetch(`/image/top?id=${this.id}&ntop=${this.ntop}&rank=${this.rank}&labtype=${this.labtype}&task=${this.task}&mult=${this.mult}&group=${encodeURIComponent(this.group)}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -88,7 +115,6 @@ export default {
                 this.desc = json.desc;
                 this.nsubs = json.nsubs;
                 this.w = json.w;
-                this.b = json.b;
                 this.id = json.id;
                 this.getTop();
             })

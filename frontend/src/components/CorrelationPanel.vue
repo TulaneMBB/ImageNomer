@@ -62,21 +62,32 @@ export default {
             fetch(url)
             .then(resp => resp.json())
             .then(json => {
-            this.loading = false;
-            if (json.err) {
-                this.error = json.err;
-                return;
-            }
-            this.store.corr = json.data;
-            if (this.respVar == "fc") {
-                this.store.saved.push({
-                    type: "corr",
-                    label: `(${json.id}) corr | group: ${this.group}, feat: ${this.feat}, task: ${this.task}`,
-                    data: json.data,
-                    id: json.id,
-                });
-            }
-            this.store.display = "corr";
+                this.loading = false;
+                if (json.err) {
+                    this.error = json.err;
+                    return;
+                }
+                if (this.respVar == "fc") {
+                    this.store.corr = json.rdata;
+                    this.store.p = json.pdata;
+                    this.store.saved.push({
+                        type: "fc-corr",
+                        label: `(${json.rid}) corr | group: ${this.group}, feat: ${this.feat}, task: ${this.task}`,
+                        data: json.rdata,
+                        id: json.rid,
+                    });
+                    this.store.saved.push({
+                        type: "p-for-corr",
+                        label: `(${json.pid}) p-for-corr | group: ${this.group}, feat: ${this.feat}, task: ${this.task}`,
+                        data: json.pdata,
+                        id: json.pid,
+                        rid: json.rid,
+                    });
+                    this.store.display = "fc-corr";
+                } else {
+                    this.store.corr = json.data;
+                    this.store.display = "corr";
+                }
             })
             .catch(err => this.error = err);
         },

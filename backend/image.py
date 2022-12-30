@@ -30,9 +30,10 @@ def histogram(ys, ylabels, bins=20, density=True):
     ax.legend()
     return tobase64(fig)
 
-def imshow_private(fc, colorbar=True):
+def imshow_private(fc, colorbar=True, reverse_cmap=False):
     fig, ax = plt.subplots()
-    im = ax.imshow(fc)
+    cmap = 'viridis_r' if reverse_cmap else 'viridis'
+    im = ax.imshow(fc, cmap=cmap)
     if colorbar:
         fig.colorbar(mappable=im, ax=ax)
     return tobase64(fig)
@@ -81,8 +82,8 @@ def bar_private(data, labels):
 
 # Weird stuff with matplotlib and multithreading? crashes the process
 # Can fix with mutliprocessing
-def imshow(fc, colorbar=True):
-    return mp_wrap(imshow_private, fc, colorbar)
+def imshow(fc, colorbar=True, reverse_cmap=False):
+    return mp_wrap(imshow_private, fc, colorbar, reverse_cmap)
 
 def groups_hist(df, groups, field):
     return mp_wrap(groups_hist_private, df, groups, field)

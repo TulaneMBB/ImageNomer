@@ -168,15 +168,19 @@ def corr_fc():
             fcs.append(fc)
     # Get correlation
     cat = 'M' if field == 'sex' else None
-    rho = correlation.correlate_feat(fcs, demo_field, cat=cat)
+    rho, p = correlation.corr_feat(fcs, demo_field, cat=cat)
     rho = data.vec2mat(rho, fillones=False)
+    p = data.vec2mat(p, fillones=False)
     if remap:
         rho = power.remap(rho)
+        p = power.remap(p)
     # Save correlation for image math
-    id = session.save(rho)
+    rid = session.save(rho)
+    pid = session.save(p)
     # Send image
-    img = image.imshow(rho, colorbar=True)
-    return jsonify({'data': img, 'id': id})
+    rimg = image.imshow(rho, colorbar=True)
+    pimg = image.imshow(p, colorbar=True, reverse_cmap=True)
+    return jsonify({'rdata': rimg, 'rid': rid, 'pdata': pimg, 'pid': pid})
 
 '''Perform image math'''
 @app.route('/math/image', methods=(['GET']))
@@ -209,13 +213,12 @@ def feature():
     # Get feature
     feat = data.get_feat('anton', coh, fname)
     w = data.vec2mat(feat.w, fillones=False) #if feat.vec2mat else feat.w
-    b = float(feat.b) # TODO
     if remap:
         w = power.remap(w)
     # Save feature
     id = session.save(w)
     img = image.imshow(w)
-    return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'b': b, 'id': id})
+    return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'id': id})
 
 ''' Bar graph of top values '''
 @app.route('/image/top', methods=(['GET']))
@@ -230,6 +233,8 @@ def imgtop():
     ntop = int(args['ntop']) if 'ntop' in args else 20
     rank = args['rank'] if 'rank' in args else 'abs'
     labtype = args['labtype'] if 'labtype' in args else 'raw'
+    mult = 'mult' in args and args['mult'] else False
+    task = args['task'] if 'task' in args else 'All'
     # Load from session
     datimg = session.load(id) # Save fname for loading instead of img TODO
     datimg = data.mat2vec(datimg)
