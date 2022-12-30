@@ -128,7 +128,7 @@ export default {
                 this.store.fc = this.parseFC(json.fc);
                 this.store.demo = json.demo;
                 this.store.subs = this.getSubs(json.demo);
-                this.store.feats = json.feats;
+                this.store.weights = json.weights;
                 this.store.groups = [{query: 'All', subs: this.store.subs}];
             })
             .catch(err => this.error = err);

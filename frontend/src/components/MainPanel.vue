@@ -47,8 +47,8 @@
                 <v-btn @click='stats("std")' class='ml-4'>Standard Deviation</v-btn>
             </div>
         </div>
-        <div v-else-if='store.display == "feats"'>
-            <FeaturesPanel></FeaturesPanel>
+        <div v-else-if='store.display == "weights"'>
+            <WeightsPanel></WeightsPanel>
         </div>
         <div v-else v-for='field in Object.keys(store.demo)' :key='field'>
             <Demographics v-if='store.display == field' cohort='test' :field='store.display'/>
@@ -60,7 +60,7 @@
 import FC from './FC.vue'
 import { useCohortStore } from "@/stores/CohortStore";
 import Demographics from './Demographics.vue';
-import FeaturesPanel from './FeaturesPanel.vue';
+import WeightsPanel from './WeightsPanel.vue';
 import { savedImageType } from './../functions.js'
 
 export default {
@@ -78,7 +78,7 @@ export default {
     components: {
         FC,
         Demographics,
-        FeaturesPanel
+        WeightsPanel
     },
     computed: {
         filteredGroupFC() {

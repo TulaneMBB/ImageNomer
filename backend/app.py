@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import os
 import json
+import numpy as np
 
 # Our modules
 import power
@@ -132,8 +133,9 @@ def corr_demo():
 @app.route('/analysis/corr/fc', methods=(['GET']))
 def corr_fc():
     args = request.args
-    # Optional: task, session
-    args_err = validate_args(['cohort', 'query', 'field'], args, request.url) 
+    # Optional: task, ses, thresh
+    args_err = validate_args(['cohort', 'query', 'field'], 
+        args, request.url) 
     if args_err:
         return args_err
     # Params
@@ -142,35 +144,40 @@ def corr_fc():
     field = args['field']
     task = args['task'] if 'task' in args else None
     ses = args['ses'] if 'ses' in args else None
+    thresh = args['thresh'] if 'thresh' in args else None
     remap = 'remap' in args
-    # Load demographics 
+    # Load demographics
     demo = data.get_demo('anton', coh)
     df = data.demo2df(demo)
     # Load group
-    if query == 'All':
-        group = df.index
-        demo_field = df[field]
-    else:
-        qres = df.query(query)
-        group = list(qres.index)
-        demo_field =qres[field]
-    demo_field = list(demo_field)
-    # Get FCs
+    group = df.index if query == 'All' else df.query(query).index
+    # Get list of tasks
+    tasks = (cohort.get_tasks('anton', coh) 
+        if task is None else [task])
+    # Get fcs and pheno
     fcs = []
-    if task is None:
-        tasks = cohort.get_tasks('anton', coh)
-        demo_field = len(tasks)*demo_field
-    else:
-        tasks = [task]
+    pheno = []
     for task in tasks:
         for sub in group:
-            fc = data.get_fc('anton', coh, sub, task, ses)
-            fcs.append(fc)
-    # Get correlation
+            if data.has_fc('anton', coh, sub, task, ses):
+                if field is not None:
+                    pheno.append(df.loc[sub][field])
+                fc = data.get_fc('anton', coh, sub, task, ses)
+                fcs.append(fc)
+    fcs = np.stack(fcs)
+    # Get correlation and p-value
     cat = 'M' if field == 'sex' else None
-    rho, p = correlation.corr_feat(fcs, demo_field, cat=cat)
+    rho, p = correlation.corr_feat(fcs, pheno, cat=cat)
     rho = data.vec2mat(rho, fillones=False)
     p = data.vec2mat(p, fillones=False)
+    # Apply threshold
+    if thresh == 'pos':
+        p[rho < 0] = 0
+        rho[rho < 0] = 0
+    elif thresh == 'neg':
+        p[rho > 0] = 0
+        rho[rho > 0] = 0
+    # Remap FCs
     if remap:
         rho = power.remap(rho)
         p = power.remap(p)
@@ -199,47 +206,74 @@ def imgmath():
     img = image.imshow(res, colorbar=True)
     return jsonify({'data': img})
 
-''' Get feature data '''
-@app.route('/data/feature', methods=(['GET']))
-def feature():
+''' Get weights data '''
+@app.route('/data/weights', methods=(['GET']))
+def weights():
     args = request.args
-    args_err = validate_args(['cohort', 'fname', 'remap'], args, request.url) 
+    # Optional session, mult, task, query, remap
+    args_err = validate_args(['cohort', 'fname'], 
+        args, request.url) 
     if args_err:
         return args_err
     # Params
     coh = args['cohort']
     fname = args['fname']
+    ses = args['ses'] if 'ses' in args else None
+    mult = args['mult'] if 'mult' in args else 'no'
+    task = args['task'] if 'task' in args else 'All'
+    query = args['query'] if 'query' in args else 'All'
     remap = 'remap' in args
-    # Get feature
-    feat = data.get_feat('anton', coh, fname)
-    w = data.vec2mat(feat.w, fillones=False) #if feat.vec2mat else feat.w
+    # Get weights
+    # TODO non-FC or image features
+    wobj = data.get_weights('anton', coh, fname)
+    w = wobj.w
+    # If multiplying, load subject features
+    if mult != 'no':
+        # Load demographics
+        demo = data.get_demo('anton', coh)
+        df = data.demo2df(demo)
+        # Load group
+        group = df.index if query == 'All' else df.query(query).index
+        # Get list of tasks
+        tasks = (cohort.get_tasks('anton', coh) 
+            if task == 'All' else [task])
+        # Get fcs
+        fcs = []
+        for task in tasks:
+            for sub in group:
+                if data.has_fc('anton', coh, sub, task, ses):
+                    fc = data.get_fc('anton', coh, sub, task, ses=None)
+                    fcs.append(fc)
+        fcs = np.stack(fcs)
+        # Multiply
+        if mult == 'mean':
+            feat = np.mean(fcs, axis=0)
+        elif mult == 'std':
+            feat = np.std(fcs, axis=0)
+        w *= feat
+    # Save weights, remapping first
     if remap:
-        w = power.remap(w)
-    # Save feature
-    id = session.save(w)
-    img = image.imshow(w)
-    return jsonify({'desc': feat.desc, 'nsubs': len(feat.subs), 'w': img, 'id': id})
+        wimg = power.remap(data.vec2mat(w, fillones=False))
+        w = data.mat2vec(wimg)
+    else:
+        wimg = data.vec2mat(w, fillones=False)
+    session.save_weights(w)
+    # Display as image
+    img = image.imshow(wimg)
+    return jsonify({'desc': wobj.desc, 'nsubs': len(wobj.subs), 'w': img})
 
 ''' Bar graph of top values '''
 @app.route('/image/top', methods=(['GET']))
 def imgtop():
     args = request.args
-    # Optional ntop, rank, labtype
-    args_err = validate_args(['id'], args, request.url) 
-    if args_err:
-        return args_err
-    # Params
-    id = args['id']
+    # Optional params: ntop, rank, labtype
     ntop = int(args['ntop']) if 'ntop' in args else 20
     rank = args['rank'] if 'rank' in args else 'abs'
-    labtype = args['labtype'] if 'labtype' in args else 'raw'
-    mult = 'mult' in args and args['mult'] else False
-    task = args['task'] if 'task' in args else 'All'
-    # Load from session
-    datimg = session.load(id) # Save fname for loading instead of img TODO
-    datimg = data.mat2vec(datimg)
-    # Get top features
-    vec, idcs = data.get_top(datimg, n=ntop, rank=rank)
+    labtype = args['labtype'] if 'labtype' in args else 'raw'  
+    # Load weights
+    w = session.load_weights()
+    # Get top weights
+    vec, idcs = data.get_top(w, n=ntop, rank=rank)
     labels = power.label(idcs, labtype)
     # Draw image
     img = image.bar(vec, labels)

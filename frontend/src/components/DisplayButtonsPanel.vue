@@ -6,7 +6,7 @@
         <v-btn key='fc' value='fc'>FC</v-btn>
         <v-btn key='fmri' value='fmri'>fMRI</v-btn>
         <v-btn key='smri' value='smri'>sMRI</v-btn>
-        <v-btn key='feats' value='feats'>Features</v-btn>
+        <v-btn key='weights' value='weights'>Weights</v-btn>
     </v-btn-toggle>
 </template>
 

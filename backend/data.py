@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 import pandas as pd
 import sys
-# import pandasql as ps
+from pathlib import Path
 
 class Features:
     def __init__(self, w, b, subs, desc):
@@ -46,21 +46,27 @@ def mat2vec(fc):
     a,b = np.triu_indices(d,1)
     return fc[a,b]
 
-def get_fc(user, cohort, sub, task=None, ses=None):
+def get_fc_fname(user, cohort, sub, task=None, ses=None):
     task = f'_task-{task}' if task is not None else ''
     ses = f'_ses-{ses}' if ses is not None else ''
     fname = f'data/{user}/cohorts/{cohort}/fc/{sub}{task}{ses}_fc.npy'
-    return np.load(fname)
+    return fname
+
+def has_fc(user, cohort, sub, task=None, ses=None):
+    return Path(get_fc_fname(user, cohort, sub, task, ses)).exists
+
+def get_fc(user, cohort, sub, task=None, ses=None):
+    return np.load(get_fc_fname(user, cohort, sub, task, ses))
 
 def get_demo(user, cohort, file=False):
     fname = f'data/{user}/cohorts/{cohort}/demographics.pkl'
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
-def get_feat(user, cohort, fname):
+def get_weights(user, cohort, fname):
     # Hack for python's module structure
     sys.modules['__main__'].Features = Features
-    fname = f'data/{user}/cohorts/{cohort}/features/{fname}'
+    fname = f'data/{user}/cohorts/{cohort}/weights/{fname}'
     with open(fname, 'rb') as f:
         return pickle.load(f)
 

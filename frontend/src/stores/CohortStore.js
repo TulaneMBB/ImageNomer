@@ -16,7 +16,7 @@ export const useCohortStore = defineStore("CohortStore", {
         return {
             fc: [], 
             demo: {},
-            feats: [],
+            weights: [],
             subs: [],
             groups: [],
             display: null,

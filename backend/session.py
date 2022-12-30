@@ -3,6 +3,7 @@
 import math
 
 saved = dict()
+saved_w = None
 idcount = 1
 
 def get_id():
@@ -24,6 +25,14 @@ def save(data):
     saved[id] = data
     return id
 
+def save_weights(data):
+    global saved_w
+    saved_w = data
+
 def load(id):
     global saved
     return saved[id]
+
+def load_weights():
+    global saved_w
+    return saved_w
