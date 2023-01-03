@@ -6,18 +6,17 @@ import pandas as pd
 import sys
 from pathlib import Path
 
-class Features:
-    def __init__(self, w, b, subs, desc):
+class Weights:
+    def __init__(self, w, subs_tr, subs_t, desc):
         self.w = self.to_numpy(w)
-        self.b = self.to_numpy(b)
-        self.subs = subs
+        self.subs_tr = subs_tr
+        self.subs_t = subs_t
         self.desc = desc
-        # self.vec2mat = vec2mat
         
     def to_numpy(self, data):
         if isinstance(data, torch.Tensor):
             return data.detach().cpu().numpy()
-        elif isinstance(data, numpy.ndarray):
+        elif isinstance(data, np.ndarray):
             return data
         else:
             raise TypeError(data)
@@ -27,11 +26,11 @@ class Features:
             pickle.dump(self, f)
 
 def d_from_vec(fc):
-    n = len(fc)
+    n = fc.size
     return int(round((1+(1+8*n)**0.5)/2))
 
 def vec2mat(fc, fillones=True):
-    d = d_from_vec(fc)
+    d = d_from_vec(fc) 
     a,b = np.triu_indices(d,1)
     mat = np.zeros((d,d))
     mat[a,b] = fc
@@ -65,7 +64,7 @@ def get_demo(user, cohort, file=False):
 
 def get_weights(user, cohort, fname):
     # Hack for python's module structure
-    sys.modules['__main__'].Features = Features
+    sys.modules['__main__'].Weights = Weights
     fname = f'data/{user}/cohorts/{cohort}/weights/{fname}'
     with open(fname, 'rb') as f:
         return pickle.load(f)

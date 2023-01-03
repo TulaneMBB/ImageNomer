@@ -1,15 +1,5 @@
 import { defineStore } from 'pinia';
-
-function getFnameField(fname, field) {
-    let val = null;
-    fname.split('_').forEach(part => {
-        const pp = part.split('-');
-        if (pp.length == 2 && pp[0] == field) {
-            val = pp[1];
-        }
-    });
-    return val;
-}
+import { getFnameField } from './../functions.js';
 
 export const useCohortStore = defineStore("CohortStore", {
     state: () => {
@@ -27,25 +17,39 @@ export const useCohortStore = defineStore("CohortStore", {
         };
     },
     getters: {
+        // selected and groupSelected:
+        // NOTE: maybe required to say state['groups'] not state.groups
         groupSelected: (state) => {
             return (type, task) => {
-                let num = 0;
                 return state[type].filter(item => {
                     const groups = state['groups'];
                     for (let i=0; i<groups.length; i++) {
-                        if (groups[i].selected && groups[i].subs.indexOf(item.sub) != -1) {
-                            if (!task || task == 'All' || getFnameField(item.fname, "task") == task) {
-                                item.num = num++;
-                                return true;
-                            }
-                        }
+                        if (!groups[i].selected)
+                            continue;
+                        if (groups[i].subs.indexOf(item.sub) == -1) 
+                            continue
+                        return !task || task == 'All' || 
+                            getFnameField(item.fname, 'task') == task;
                     }
                     return false;
                 });
             };
         },
-        selected: (state) => {
-            return (type) => state[type].filter(elt => elt.selected);
+        selected(state) {
+            return (type, task) => {
+                const subs = state['subs']
+                    .filter(elt => elt.selected)
+                    .map(elt => elt.id); 
+                if (!type) {
+                    return subs;
+                }
+                return state[type]
+                    .filter(elt => {
+                        return !task || task == 'All' 
+                            || getFnameField(elt.fname, 'task') == task;
+                    })
+                    .filter(elt => subs.indexOf(elt.sub) != -1);
+            };
         },
         summary: (state) => {
             return (field) => {
@@ -53,7 +57,8 @@ export const useCohortStore = defineStore("CohortStore", {
                 if (!isNaN(vals[0])) {
                     const min = Math.min(...vals).toFixed(1);
                     const max = Math.max(...vals).toFixed(1);
-                    const mean = (vals.reduce((prev, cur) => prev+cur, 0)/vals.length).toFixed(1);
+                    const mean = (vals.reduce((prev, cur) => prev+cur, 0)
+                        /vals.length).toFixed(1);
                     return `min: ${min} mean: ${mean} max: ${max} (n=${vals.length})`;
                 } else if (vals[0] == 'M' || vals[0] == 'F') {
                     let m = 0;
@@ -69,7 +74,8 @@ export const useCohortStore = defineStore("CohortStore", {
         tasks: (state) => {
             return (field) => {
                 const tasks = new Set();
-                state[field].forEach(item => tasks.add(getFnameField(item.fname, 'task')));
+                state[field].forEach(
+                    item => tasks.add(getFnameField(item.fname, 'task')));
                 return [...tasks];
             };
         }

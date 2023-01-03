@@ -1,7 +1,7 @@
 <template>
     <v-card class='mb-2'>
         <v-card-title>ImageNomer</v-card-title>
-        <v-card-subtitle>{{ cohort }} cohort {{ store.subs.length }} subjects</v-card-subtitle>
+        <v-card-subtitle>{{ cohort }} cohort</v-card-subtitle>
     </v-card>
 </template>
 

@@ -4,14 +4,30 @@
         subtitle='Compare model weights from analysis runs'
         class='mb-2'
     >
-        <v-select
-            label='Weights File'
-            v-model='fname'
-            :items='this.store.weights'
-            :change='loadWeights()'
-            dense
-            class='ma-0 ml-4 mr-4 pa-0'>
-        </v-select>
+        <v-row align='center' class='ma-0 ml-4 mr-4 mb-4 pa-0'>
+            <v-breadcrumbs divider='>'>
+                <v-breadcrumbs-item 
+                    :key='dir'
+                    v-for='dir in dirPath'>
+                <v-btn @click='backDir(dir)'>{{ dir }}</v-btn>
+                </v-breadcrumbs-item>
+            </v-breadcrumbs>
+            <v-select 
+                label='Directory' 
+                v-model='dirSel'
+                :items='dirItems'
+                dense
+                class='ma-0 pa-0 mr-4'>
+            </v-select>
+            <v-select
+                label='Weights File'
+                v-model='fname'
+                :items='dirFnames'
+                :change='loadWeights()'
+                dense
+                class='ma-0 pa-0'>
+            </v-select>
+        </v-row>
         <v-row align='center' class='ma-0 ml-4 mr-4 pa-0'>
             <v-select
                 label='Multiply by Features'
@@ -50,9 +66,8 @@
                 <v-radio label='Negative' value='neg'></v-radio>
             </v-radio-group>
             <v-col>
-                <v-slider label='Number' v-model='ntop' min='3' max='30' step='1' @change='getTop()'>
+                <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
                 </v-slider>
-                <v-btn @click='getTop()'>Refresh</v-btn>
             </v-col>
         </v-row>
         <div v-if='fname' class='text-h6 text-center ml-4'>
@@ -72,12 +87,24 @@ import { useCohortStore } from "@/stores/CohortStore";
 
 export default {
     name: 'WeightsPanel',
+    computed: {
+        dirFnames() {
+            const curDir = this.getCurDirContents();
+            return curDir ? curDir['fnames'] : [];
+        },
+        dirItems() {
+            const curDir = this.getCurDirContents();
+            return curDir && curDir['dirs'] 
+                ? Object.keys(curDir['dirs']) : [];
+        }
+    },
     data() {
         return {
             fname: '',
             error: null,
             desc: '',
-            nsubs: 0,
+            ntrain: 0,
+            ntest: 0,
             w: null,
             topdata: null,
             labtype: 'raw',
@@ -86,11 +113,31 @@ export default {
             query: "All",
             task: "All",
             mult: "no",
+            dirSel: null,
+            dirPath: ["/"],
+            dirFiles: [],
         }
     },
     methods: {
-        alert(stuff) {
-            console.log(stuff);
+        backDir(dir) {
+            for (let i=0; i<this.dirPath.length; i++) {
+                if (this.dirPath[i] == dir) {
+                    this.dirPath = this.dirPath.slice(0,i+1);
+                    return;
+                }
+            }
+        },
+        changeDir() {
+            this.dirPath.push(this.dirSel);
+        },
+        getCurDirContents() {
+            let curDir = this.store.weights;
+            this.dirPath.slice(1).forEach(d => {
+                if (curDir['dirs']) {
+                    curDir = curDir['dirs'][d];
+                }
+            });
+            return curDir;
         },
         getTop() {
             if (!this.fname) return;
@@ -108,7 +155,9 @@ export default {
         },
         loadWeights() {
             if (!this.fname) return;
-            fetch(`/data/weights?cohort=test&fname=${this.fname}&task=${this.task}&mult=${this.mult}&query=${encodeURIComponent(this.query)}&remap`)
+            const fname = this.dirPath.slice(1).concat([this.fname]).join('/');
+            console.log(fname);
+            fetch(`/data/weights?cohort=test&fname=${fname}&task=${this.task}&mult=${this.mult}&query=${encodeURIComponent(this.query)}&remap`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.err) {
@@ -117,7 +166,8 @@ export default {
                     return;
                 }
                 this.desc = json.desc;
-                this.nsubs = json.nsubs;
+                this.ntrain = json.ntrain;
+                this.ntest = json.ntest;
                 this.w = json.w;
                 this.getTop();
             })
@@ -128,6 +178,15 @@ export default {
         const store = useCohortStore();
         return {
             store
+        }
+    },
+    watch: {
+        dirSel() {
+            this.fname = '';
+            this.changeDir();
+        },
+        ntop() {
+            this.getTop();
         }
     }
 }

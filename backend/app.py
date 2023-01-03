@@ -260,7 +260,11 @@ def weights():
     session.save_weights(w)
     # Display as image
     img = image.imshow(wimg)
-    return jsonify({'desc': wobj.desc, 'nsubs': len(wobj.subs), 'w': img})
+    return jsonify({
+        'desc': wobj.desc, 
+        'ntrain': len(wobj.subs_tr), 
+        'ntest': len(wobj.subs_t),
+        'w': img})
 
 ''' Bar graph of top values '''
 @app.route('/image/top', methods=(['GET']))
