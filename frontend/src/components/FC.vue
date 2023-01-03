@@ -11,6 +11,7 @@
 
 <script>
 import { useCohortStore } from "@/stores/CohortStore";
+import { enc } from './../functions.js';
 
 export default {
     name: 'FC',
@@ -45,7 +46,7 @@ export default {
         fetchFcImage() {
             const remap = this.remap ? '&remap' : '';
             const colorbar = this.colorbar ? '&colorbar' : '';
-            fetch(`/data/fc?cohort=${this.cohort}&sub=${this.sub}&task=${this.task}${remap}${colorbar}`)
+            fetch(`/data/fc?cohort=${enc(this.cohort)}&sub=${enc(this.sub)}&task=${enc(this.task)}${remap}${colorbar}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;

@@ -68,7 +68,8 @@ def demo_hist():
         args = request.args
     else:
         args = request.form
-    args_err = validate_args(['cohort', 'groups', 'field'], args, request.url)
+    args_err = validate_args(['cohort', 'groups', 'field'], 
+        args, request.url)
     if args_err:
         return args_err
     cohort = args['cohort']

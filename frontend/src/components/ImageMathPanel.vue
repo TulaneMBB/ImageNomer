@@ -1,48 +1,84 @@
 <template>
+    <div v-if='imageData'>
+        <img v-bind:src="'data:image/png;base64,'+imageData">
+    </div>
     <v-card 
         title='Image Math' 
         subtitle='Perform operations on images, e.g., correlation images'
+        class='pa-4'
     >
         <v-row align='center' dense class='mb-4'>
             <v-text-field
                 label='Expression (e.g. "A-B", "std(A,BA,C)")'
                 v-model='expr'
-                hide-details dense class='ml-4'>
+                hide-details dense>
             </v-text-field>
-            <v-btn @click='doImageMath()' key='go' value='Go' class='ml-4 mr-4'>Go</v-btn>
+            <v-btn 
+                @click='doImageMath()' 
+                key='go' value='Go' class='ml-4'>
+                Go
+            </v-btn>
         </v-row>
-        <div 
-            v-if='store.saved.filter(item => savedImageType(item.type)).length > 0'
-            class='text-h6 ml-4 mb-6'
-        >
+        <div v-if='saved.length > 0'
+            class='text-h6 mb-6'>
             Images
         </div>
         <v-checkbox 
-            v-for="item in store.saved.filter(item => savedImageType(item.type))" 
-            :key="item.num" 
+            v-for="item in saved" 
+            :key="item.idx" 
             v-model="item.selected" 
             :label="item.label"
             dense
             hide-details 
-            class="ma-0 pa-0 ml-2 mr-2 mt-n8 d-inline-flex">
+            class="ma-0 pa-0 mr-4 mt-n8 d-inline-flex">
         </v-checkbox>
+        <div>
+            <v-btn @click='rm'>Remove</v-btn>
+        </div>
     </v-card>
 </template>
 
 <script>
 import { useCohortStore } from "@/stores/CohortStore";
-import { savedImageType } from './../functions.js';
+import { enc, savedImageType } from './../functions.js';
 
 export default {
     name: 'ImageMathPanel',
+    created() {
+        if (this.saved.length > 0 
+            && this.saved.at(-1).type.match(/stats/)) {
+            this.expr = this.saved.at(-1).id;
+            this.doImageMath();
+        }
+    },
+    computed: {
+        saved() {
+            return this.store.saved
+            .filter(item => savedImageType(item.type))
+            .map((item,idx) => {
+                item.idx = idx;
+                return item;
+            });
+        },
+        selected() {
+            return this.saved
+            .filter(item => item.selected);
+        }
+    },
     data() {
         return {
-            expr: ""
+            expr: "",
+            imageData: null,
         }
     },
     methods: {
+        rm() {
+            // TODO implement remove
+            console.log(this.selected);
+            //idcs = this.selected.map(item => item.idx);
+        },
         doImageMath() {
-            fetch(`/math/image?expr=${encodeURIComponent(this.expr)}`)
+            fetch(`/math/image?expr=${enc(this.expr)}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -50,12 +86,12 @@ export default {
                     this.error = json.err;
                     return;
                 }
-                this.store.corr = json.data;
-                this.store.display = "corr";
+                this.imageData = json.data;
+                //this.store.corr = json.data;
+                //this.store.display = "corr";
             })
             .catch(err => this.error = err);
         },
-        savedImageType
     },
     setup() {
         const store = useCohortStore();

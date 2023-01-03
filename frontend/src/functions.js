@@ -1,5 +1,9 @@
 export function savedImageType(type) {
-    return type == 'corr' || type == 'stats' || type == 'fc-corr';
+    return type.match(/corr|stats/);
+}
+
+export function enc(val) {
+    return encodeURIComponent(val);
 }
 
 export function getFnameField(fname, field) {

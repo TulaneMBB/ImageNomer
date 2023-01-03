@@ -1,8 +1,17 @@
 <template>
     <v-card title='Correlation' class='mb-2'>
-        <v-card-subtitle>Find correlation between demographic features and FC for group</v-card-subtitle>
+        <v-card-subtitle>
+            Find correlation between demographic features and FC for group
+        </v-card-subtitle>
+        <div>
+            <div v-if='url' class='text-body-2 ma-4'>{{ url }}</div>
+            <img v-if='imageData' 
+                v-bind:src="'data:image/png;base64,'+imageData">
+            <img v-if='pImageData' 
+                v-bind:src="'data:image/png;base64,'+pImageData">
+        </div>
         <v-row align='center' class='pa-4 pt-3 pb-3 ma-0'>
-            <v-select 
+           <v-select 
                 v-model='group'
                 :items='store.groups' 
                 item-title='query' 
@@ -27,22 +36,27 @@
                 label='Task'
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
-            <v-btn @click='getCorr()' key='go' value='Go' class='ml-4 mr-0'>Go</v-btn>
+            <v-btn @click='getCorr()' 
+                key='go' value='Go' class='ml-4 mr-0'>Go</v-btn>
         </v-row>
     </v-card>
 </template>
 
 <script>
 import { useCohortStore } from "@/stores/CohortStore";
+import { enc } from './../functions.js';
 
 export default {
     name: "CorrelationPanel",
     data() {
         return {
+            imageData: null,
+            pImageData: null,
             group: null,
             feat: null,
             respVar: null,
             task: null,
+            url: null,
         };
     },
     setup() {
@@ -55,11 +69,11 @@ export default {
         getCorr() {
             const taskPart = (this.task == "All")
                 ? ""
-                : `&task=${this.task}`;
-            const url = (this.respVar == "fc")
-                ? `/analysis/corr/fc?cohort=test&query=${this.group}&field=${this.feat}${taskPart}&remap`
-                : `/analysis/corr/demo?cohort=test&query=${this.group}&field1=${this.feat}&field2=${this.respVar}`;
-            fetch(url)
+                : `&task=${enc(this.task)}`;
+            this.url = (this.respVar == "fc")
+                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&remap`
+                : `/analysis/corr/demo?cohort=test&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}`;
+            fetch(this.url)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -72,7 +86,7 @@ export default {
                     this.store.p = json.pdata;
                     this.store.saved.push({
                         type: "fc-corr",
-                        label: `(${json.rid}) corr | group: ${this.group}, feat: ${this.feat}, task: ${this.task}`,
+                        label: `(${json.rid}) fc-corr | group: ${this.group}, feat: ${this.feat}, task: ${this.task}`,
                         data: json.rdata,
                         id: json.rid,
                     });
@@ -83,10 +97,13 @@ export default {
                         id: json.pid,
                         rid: json.rid,
                     });
-                    this.store.display = "fc-corr";
+                    this.imageData = json.rdata;
+                    this.pImageData = json.pdata;
+                    //this.store.display = "fc-corr";
                 } else {
-                    this.store.corr = json.data;
-                    this.store.display = "corr";
+                    this.imageData = json.data;
+                    this.pImageData = null;
+                    //this.store.display = "corr";
                 }
             })
             .catch(err => this.error = err);

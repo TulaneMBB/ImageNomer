@@ -84,6 +84,7 @@
 
 <script>
 import { useCohortStore } from "@/stores/CohortStore";
+import { enc } from './../functions.js';
 
 export default {
     name: 'WeightsPanel',
@@ -141,7 +142,7 @@ export default {
         },
         getTop() {
             if (!this.fname) return;
-            fetch(`/image/top?ntop=${this.ntop}&rank=${this.rank}&labtype=${this.labtype}`)
+            fetch(`/image/top?ntop=${enc(this.ntop)}&rank=${enc(this.rank)}&labtype=${enc(this.labtype)}`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.err) {
@@ -157,7 +158,7 @@ export default {
             if (!this.fname) return;
             const fname = this.dirPath.slice(1).concat([this.fname]).join('/');
             console.log(fname);
-            fetch(`/data/weights?cohort=test&fname=${fname}&task=${this.task}&mult=${this.mult}&query=${encodeURIComponent(this.query)}&remap`)
+            fetch(`/data/weights?cohort=test&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.err) {

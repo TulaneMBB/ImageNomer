@@ -77,7 +77,7 @@
 
 <script>
 import { useCohortStore } from "@/stores/CohortStore";
-import { getFnameField } from './../functions.js';
+import { enc, getFnameField } from './../functions.js';
 
 export default {
     name: 'CohortInfo',
@@ -108,7 +108,7 @@ export default {
     },
     methods: {
         fetchCohort() {
-            fetch(`/data/info?cohort=${this.cohort}`)
+            fetch(`/data/info?cohort=${enc(this.cohort)}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -135,7 +135,7 @@ export default {
             return subs;
         },
         makeGroup() {
-            fetch(`/data/group?cohort=${this.cohort}&query=${this.query}`)
+            fetch(`/data/group?cohort=${enc(this.cohort)}&query=${enc(this.query)}`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.err) {

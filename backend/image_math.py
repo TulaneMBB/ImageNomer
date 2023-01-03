@@ -31,7 +31,9 @@ def evalnode(node):
     elif isinstance(node, ast.Name):
         return session.load(node.id)
     elif isinstance(node, ast.BinOp):
-        return operators[type(node.op)](evalnode(node.left), evalnode(node.right))
+        return operators[type(node.op)](
+            evalnode(node.left), 
+            evalnode(node.right))
     elif isinstance(node, ast.Call):
         raise TypeError(node)
     else:

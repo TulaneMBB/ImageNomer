@@ -1,45 +1,45 @@
 <template>
-    <div class='mb-4'>
-        <div v-if='displayedFC.length > 0'>
-            <v-card subtitle='Display Options'>
-                <v-select
-                    label='Task'
-                    v-model='task'
-                    :items='["All"].concat(store.tasks("fc"))'
-                    dense
-                    class='d-inline-flex ma-0 pa-0 ml-4'>
-                </v-select>
-                <v-checkbox
-                    v-for='field in ["ID","Task"].concat(Object.keys(store.demo))'
-                    :key="field" 
-                    v-model="store.labels[field]" 
-                    :label="field"
-                    dense
-                    class="d-inline-flex ma-0 pa-0">
-                </v-checkbox>
-            </v-card>
-            <v-pagination
-                v-model='page'
-                :length="Math.ceil(filteredFC.length/NUM_FC_PAGE)"
-                total-visible='10'>
-            </v-pagination>
-            <FC 
-                v-for="fc in displayedFC"
-                :key="fc.id" cohort='test' :sub='fc.sub' :task='fc.task' 
-                :display='display' remap>
-            </FC>
-            <div class='text-body-2 ml-4'>
-                Create summary image:
-                <v-btn @click='stats("mean")' 
-                    class='ml-4'>Mean</v-btn>
-                <v-btn @click='stats("std")' 
-                    class='ml-4'>Standard Deviation</v-btn>
-            </div>
-        </div>
-        <div v-else class='text-h6 ma-0 ml-2'>
-            No groups or subjects selected
+<div class='mb-4'>
+    <div v-if='displayedFC.length > 0'>
+        <v-card subtitle='Display Options'>
+            <v-select
+                label='Task'
+                v-model='task'
+                :items='["All"].concat(store.tasks("fc"))'
+                dense
+                class='d-inline-flex ma-0 pa-0 ml-4'>
+            </v-select>
+            <v-checkbox
+                v-for='field in ["ID","Task"].concat(Object.keys(store.demo))'
+                :key="field" 
+                v-model="store.labels[field]" 
+                :label="field"
+                dense
+                class="d-inline-flex ma-0 pa-0">
+            </v-checkbox>
+        </v-card>
+        <v-pagination
+            v-model='page'
+            :length="Math.ceil(filteredFC.length/NUM_FC_PAGE)"
+            total-visible='10'>
+        </v-pagination>
+        <FC 
+            v-for="fc in displayedFC"
+            :key="fc.id" cohort='test' :sub='fc.sub' :task='fc.task' 
+            :display='display' remap>
+        </FC>
+        <div class='text-body-2 ml-4'>
+            Create summary image:
+            <v-btn @click='stats("mean")' 
+                class='ml-4'>Mean</v-btn>
+            <v-btn @click='stats("std")' 
+                class='ml-4'>Standard Deviation</v-btn>
         </div>
     </div>
+    <div v-else class='text-h6 ma-0 ml-2'>
+        No groups or subjects selected
+    </div>
+</div>
 </template>
 
 <script>
@@ -104,13 +104,12 @@ export default {
                     return;
                 }
                 this.store.saved.push({
-                    type: 'stats', 
-                    label: `(${json.id}) stats:${type} | groups: ${groups}, task: ${task}`, 
+                    type: `stats-${type}`, 
+                    label: `(${json.id}) stats-${type} | groups: ${groups}, task: ${task}`, 
                     data: json.data, 
                     id: json.id,
                 });
-                this.store.corr = json.data;
-                this.store.display = "stats";
+                this.store.display = 'math';
             });
         }
     },
