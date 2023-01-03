@@ -226,8 +226,9 @@ def weights():
     remap = 'remap' in args
     # Get weights
     # TODO non-FC or image features
+    # TODO remap as wobj field
     wobj = data.get_weights('anton', coh, fname)
-    w = wobj.w
+    w = wobj['w']
     # If multiplying, load subject features
     if mult != 'no':
         # Load demographics
@@ -262,9 +263,9 @@ def weights():
     # Display as image
     img = image.imshow(wimg)
     return jsonify({
-        'desc': wobj.desc, 
-        'ntrain': len(wobj.subs_tr), 
-        'ntest': len(wobj.subs_t),
+        'desc': wobj['desc'], 
+        'ntrain': len(wobj['trsubs']), 
+        'ntest': len(wobj['tsubs']),
         'w': img})
 
 ''' Bar graph of top values '''

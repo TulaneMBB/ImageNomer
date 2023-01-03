@@ -6,6 +6,8 @@ import pandas as pd
 import sys
 from pathlib import Path
 
+'''
+Now a dictionary, see below
 class Weights:
     def __init__(self, w, subs_tr, subs_t, desc):
         self.w = self.to_numpy(w)
@@ -24,6 +26,7 @@ class Weights:
     def save(self, fname):
         with open(fname, 'wb') as f:
             pickle.dump(self, f)
+'''
 
 def d_from_vec(fc):
     n = fc.size
@@ -62,9 +65,13 @@ def get_demo(user, cohort, file=False):
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
+'''
+Weights objects contain at least the following fields:
+w (numpy.ndarray), trsubs (list(str)), tsubs (list(str)), desc (str)
+'''
 def get_weights(user, cohort, fname):
     # Hack for python's module structure
-    sys.modules['__main__'].Weights = Weights
+    #sys.modules['__main__'].Weights = Weights
     fname = f'data/{user}/cohorts/{cohort}/weights/{fname}'
     with open(fname, 'rb') as f:
         return pickle.load(f)
