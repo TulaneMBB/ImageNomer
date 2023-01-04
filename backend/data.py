@@ -48,17 +48,17 @@ def mat2vec(fc):
     a,b = np.triu_indices(d,1)
     return fc[a,b]
 
-def get_fc_fname(user, cohort, sub, task=None, ses=None):
+def get_fc_fname(user, cohort, sub, task=None, ses=None, typ='fc'):
     task = f'_task-{task}' if task is not None else ''
     ses = f'_ses-{ses}' if ses is not None else ''
-    fname = f'data/{user}/cohorts/{cohort}/fc/{sub}{task}{ses}_fc.npy'
+    fname = f'data/{user}/cohorts/{cohort}/{typ}/{sub}{task}{ses}_{typ}.npy'
     return fname
 
-def has_fc(user, cohort, sub, task=None, ses=None):
-    return Path(get_fc_fname(user, cohort, sub, task, ses)).exists
+def has_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
+    return Path(get_fc_fname(user, cohort, sub, task, ses, typ)).exists
 
-def get_fc(user, cohort, sub, task=None, ses=None):
-    return np.load(get_fc_fname(user, cohort, sub, task, ses))
+def get_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
+    return np.load(get_fc_fname(user, cohort, sub, task, ses, typ))
 
 def get_demo(user, cohort, file=False):
     fname = f'data/{user}/cohorts/{cohort}/demographics.pkl'
@@ -78,8 +78,9 @@ def get_weights(user, cohort, fname):
 
 def get_stats(typ, user, cohort, fnames):
     imgs = []
+    ftype = fnames[0].split('_')[-1].split('.')[0]
     for fname in fnames:
-        path = f'data/{user}/cohorts/{cohort}/fc/{fname}'
+        path = f'data/{user}/cohorts/{cohort}/{ftype}/{fname}'
         img = np.load(path)
         imgs.append(img)
     imgs = np.stack(imgs)

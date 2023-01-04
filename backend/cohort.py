@@ -23,11 +23,16 @@ def get_weights_tree(basepath):
 def get_cohort(user, cohort):
     p = Path(f'data/{user}/cohorts/{cohort}')
     fc = p/'fc'
+    partial = p/'partial'
     demo = p/'demographics.pkl'
     weights = p/'weights'
     dat = {}
     if fc.is_dir():
-        dat['fc'] = [f.name for f in fc.iterdir() if not f.is_dir()]
+        dat['fc'] = [f.name 
+            for f in fc.iterdir() if not f.is_dir()]
+    if partial.is_dir():
+        dat['partial'] = [f.name 
+            for f in partial.iterdir() if not f.is_dir()]
     if demo.exists():
         dat['demo'] = data.get_demo(user, cohort)
     if weights.is_dir():

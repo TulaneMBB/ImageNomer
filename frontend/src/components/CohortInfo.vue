@@ -117,6 +117,7 @@ export default {
                     return;
                 }
                 this.store.fc = this.parseFC(json.fc);
+                this.store.partial = this.parseFC(json.partial);
                 this.store.demo = json.demo;
                 this.store.subs = this.getSubs(json.demo);
                 this.store.weights = json.weights;

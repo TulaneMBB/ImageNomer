@@ -2,21 +2,35 @@
 <div class='mb-4'>
     <div v-if='displayedFC.length > 0'>
         <v-card subtitle='Display Options'>
-            <v-select
-                label='Task'
-                v-model='task'
-                :items='["All"].concat(store.tasks("fc"))'
-                dense
-                class='d-inline-flex ma-0 pa-0 ml-4'>
-            </v-select>
-            <v-checkbox
-                v-for='field in ["ID","Task"].concat(Object.keys(store.demo))'
-                :key="field" 
-                v-model="store.labels[field]" 
-                :label="field"
-                dense
-                class="d-inline-flex ma-0 pa-0">
-            </v-checkbox>
+            <v-row align='center' class='pa-4'>
+                <v-radio-group 
+                    row 
+                    class='d-inline-flex' 
+                    v-model='store.fctype' 
+                    label='Type'>
+                    <v-radio 
+                        label='FC' 
+                        value='fc'></v-radio>
+                    <v-radio 
+                        label='Partial Correlation' 
+                        value='partial'></v-radio>
+                </v-radio-group>
+                <v-select
+                    label='Task'
+                    v-model='task'
+                    :items='["All"].concat(store.tasks("fc"))'
+                    dense
+                    class='d-inline-flex ma-0 pa-0 ml-4'>
+                </v-select>
+                <v-checkbox
+                    v-for='field in ["ID","Task"].concat(Object.keys(store.demo))'
+                    :key="field" 
+                    v-model="store.labels[field]" 
+                    :label="field"
+                    dense
+                    class="d-inline-flex ma-0 pa-0">
+                </v-checkbox>
+            </v-row>
         </v-card>
         <v-pagination
             v-model='page'
@@ -25,8 +39,7 @@
         </v-pagination>
         <FC 
             v-for="fc in displayedFC"
-            :key="fc.id" cohort='test' :sub='fc.sub' :task='fc.task' 
-            :display='display' remap>
+            :key="fc.id" cohort='test' :sub='fc.sub' :task='fc.task' remap>
         </FC>
         <div class='text-body-2 ml-4'>
             Create summary image:
@@ -61,8 +74,8 @@ export default {
             let bygroup = this.store.groups
                 .reduce((acc, g) => acc || g.selected, false);
             const fcs = bygroup
-                ? this.store.groupSelected('fc', this.task)
-                : this.store.selected('fc', this.task);
+                ? this.store.groupSelected(this.store.fctype, this.task)
+                : this.store.selected(this.store.fctype, this.task);
             return fcs;
         },
     },
@@ -71,7 +84,6 @@ export default {
             page: 1,
             NUM_FC_PAGE: 18,
             task: 'All',
-            display: {},
             loading: true,
             error: null,
         }
@@ -104,8 +116,8 @@ export default {
                     return;
                 }
                 this.store.saved.push({
-                    type: `stats-${type}`, 
-                    label: `(${json.id}) stats-${type} | groups: ${groups}, task: ${task}`, 
+                    type: `stats-${type}-${this.store.fctype}`, 
+                    label: `(${json.id}) stats-${type}-${this.store.fctype} | groups: ${groups}, task: ${task}`, 
                     data: json.data, 
                     id: json.id,
                 });
@@ -122,7 +134,7 @@ export default {
     watch: {
         task() {
             this.page = 1;
-        }
+        },
     }
 }
 </script>

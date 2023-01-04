@@ -37,6 +37,9 @@ export default {
                 }
                 return {num: num++, label};
             });
+        },
+        fctype() {
+            return this.store.fctype;
         }
     },
     created() {
@@ -46,7 +49,7 @@ export default {
         fetchFcImage() {
             const remap = this.remap ? '&remap' : '';
             const colorbar = this.colorbar ? '&colorbar' : '';
-            fetch(`/data/fc?cohort=${enc(this.cohort)}&sub=${enc(this.sub)}&task=${enc(this.task)}${remap}${colorbar}`)
+            fetch(`/data/fc?cohort=${enc(this.cohort)}&sub=${enc(this.sub)}&task=${enc(this.task)}&type=${enc(this.fctype)}${remap}${colorbar}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -78,6 +81,11 @@ export default {
             store
         }
     },
+    watch: {
+        fctype() {
+            this.fetchFcImage();
+        }
+    }
 }
 </script>
 

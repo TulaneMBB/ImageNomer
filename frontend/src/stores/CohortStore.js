@@ -4,7 +4,9 @@ import { getFnameField } from './../functions.js';
 export const useCohortStore = defineStore("CohortStore", {
     state: () => {
         return {
+            fctype: 'fc',
             fc: [], 
+            partial: [],
             demo: {},
             weights: [],
             subs: [],
@@ -74,6 +76,7 @@ export const useCohortStore = defineStore("CohortStore", {
         tasks: (state) => {
             return (field) => {
                 const tasks = new Set();
+                if (!state[field]) return [];
                 state[field].forEach(
                     item => tasks.add(getFnameField(item.fname, 'task')));
                 return [...tasks];

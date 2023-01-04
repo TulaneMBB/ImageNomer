@@ -84,7 +84,7 @@ def demo_hist():
 @app.route('/data/fc', methods=(['GET']))
 def fc():
     args = request.args
-    # Optional: task, session
+    # Optional: task, session, colorbar, remap, type (fc or partial)
     args_err = validate_args(['cohort', 'sub'], args, request.url) 
     if args_err:
         return args_err
@@ -95,9 +95,10 @@ def fc():
     ses = args['ses'] if 'ses' in args else None
     colorbar = 'colorbar' in args
     remap = 'remap' in args
+    typ = args['type'] if 'type' in args else 'fc'
     # Load and display FC
-    fc = data.get_fc('anton', cohort, sub, task, ses)
-    fc = data.vec2mat(fc)
+    fc = data.get_fc('anton', cohort, sub, task, ses, typ=typ)
+    fc = data.vec2mat(fc, fillones=False)
     if remap:
         fc = power.remap(fc)
     img = image.imshow(fc, colorbar)
@@ -135,6 +136,7 @@ def corr_demo():
 def corr_fc():
     args = request.args
     # Optional: task, ses, thresh
+    # TODO: thresh
     args_err = validate_args(['cohort', 'query', 'field'], 
         args, request.url) 
     if args_err:
@@ -147,6 +149,7 @@ def corr_fc():
     ses = args['ses'] if 'ses' in args else None
     thresh = args['thresh'] if 'thresh' in args else None
     remap = 'remap' in args
+    typ = args['fctype']
     # Load demographics
     demo = data.get_demo('anton', coh)
     df = data.demo2df(demo)
@@ -160,10 +163,10 @@ def corr_fc():
     pheno = []
     for task in tasks:
         for sub in group:
-            if data.has_fc('anton', coh, sub, task, ses):
+            if data.has_fc('anton', coh, sub, task, ses, typ=typ):
                 if field is not None:
                     pheno.append(df.loc[sub][field])
-                fc = data.get_fc('anton', coh, sub, task, ses)
+                fc = data.get_fc('anton', coh, sub, task, ses, typ=typ)
                 fcs.append(fc)
     fcs = np.stack(fcs)
     # Get correlation and p-value
@@ -289,7 +292,9 @@ def imgtop():
 @app.route('/analysis/stats', methods=(['POST']))
 def stats():
     args = request.form
-    args_err = validate_args(['type', 'cohort', 'fnames', 'remap'], args, request.url)
+    args_err = validate_args(
+        ['type', 'cohort', 'fnames', 'remap'], 
+        args, request.url)
     if args_err:
         return args_err
     # Params
@@ -299,7 +304,7 @@ def stats():
     remap = 'remap' in args
     # Get FC images and calculate stat
     res = data.get_stats(typ, 'anton', coh, fnames)
-    mat = data.vec2mat(res, typ == 'mean')
+    mat = data.vec2mat(res, fillones=False)
     if remap:
        mat = power.remap(mat)
     # Save in cache

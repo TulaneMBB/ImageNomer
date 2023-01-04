@@ -4,7 +4,7 @@
             Find correlation between demographic features and FC for group
         </v-card-subtitle>
         <div>
-            <div v-if='url' class='text-body-2 ma-4'>{{ url }}</div>
+            <div v-if='url' class='text-body-2 ma-4'>{{ decodeURIComponent(url) }}</div>
             <img v-if='imageData' 
                 v-bind:src="'data:image/png;base64,'+imageData">
             <img v-if='pImageData' 
@@ -26,13 +26,14 @@
             </v-select>
             <v-select 
                 v-model='respVar'
-                :items="Object.keys(store.demo).concat(['fc'])" 
+                :items="Object.keys(store.demo).concat(['fc','partial'])" 
                 label='Response Var' 
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
             <v-select
+                v-if='respVar == "fc" || respVar == "partial"'
                 v-model='task'
-                :items='["All"].concat(store.tasks("fc"))'
+                :items='["All"].concat(store.tasks(respVar))'
                 label='Task'
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
@@ -70,8 +71,8 @@ export default {
             const taskPart = (this.task == "All")
                 ? ""
                 : `&task=${enc(this.task)}`;
-            this.url = (this.respVar == "fc")
-                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&remap`
+            this.url = (this.respVar == "fc" || this.respVar == 'partial')
+                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap`
                 : `/analysis/corr/demo?cohort=test&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}`;
             fetch(this.url)
             .then(resp => resp.json())
@@ -81,7 +82,7 @@ export default {
                     this.error = json.err;
                     return;
                 }
-                if (this.respVar == "fc") {
+                if (this.respVar == "fc" || this.respVar == 'partial') {
                     this.store.corr = json.rdata;
                     this.store.p = json.pdata;
                     this.store.saved.push({
