@@ -1,3 +1,4 @@
 dist
 data
 .git.bak
+notebooks/**/.*

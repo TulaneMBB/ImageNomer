@@ -77,7 +77,7 @@
 
 <script>
 import { useCohortStore } from "@/stores/CohortStore";
-import { enc, getFnameField } from './../functions.js';
+import { enc } from './../functions.js';
 
 export default {
     name: 'CohortInfo',
@@ -92,7 +92,8 @@ export default {
         }
     },
     created() {
-        this.fetchCohort();
+        this.fetchCohort(this.cohort);
+        this.loading = false;
     },
     computed: {
         displayed() {
@@ -108,32 +109,7 @@ export default {
     },
     methods: {
         fetchCohort() {
-            fetch(`/data/info?cohort=${enc(this.cohort)}`)
-            .then(resp => resp.json())
-            .then(json => {
-                this.loading = false;
-                if (json.err) {
-                    this.error = json.err;
-                    return;
-                }
-                this.store.fc = this.parseFC(json.fc);
-                this.store.partial = this.parseFC(json.partial);
-                this.store.demo = json.demo;
-                this.store.subs = this.getSubs(json.demo);
-                this.store.weights = json.weights;
-                this.store.groups = [{query: 'All', 
-                    subs: this.store.subs.map(sub => sub.id)}];
-            })
-            .catch(err => this.error = err);
-        },
-        getSubs(demo) {
-            let subs = new Set();
-            for (let key in demo) {
-                Object.keys(demo[key]).forEach(
-                    sub => subs.add(sub));
-            }
-            subs = [...subs].map(sub => ({id: sub, selected: false}));
-            return subs;
+            this.store.fetchCohort(this.cohort);
         },
         makeGroup() {
             fetch(`/data/group?cohort=${enc(this.cohort)}&query=${enc(this.query)}`)
@@ -150,32 +126,6 @@ export default {
         resetPage() {
             this.page = 1;
         },
-        parseFC(jsonfc) {
-            // id is just an index (from the map call)
-            jsonfc.sort();
-            return jsonfc.map((fname, idx) => {
-                return {
-                    id: idx, 
-                    fname: fname, 
-                    ...this.parseFname(fname) 
-                }
-            });
-        },
-        parseFname(fname) {
-            const sub = fname.split('_')[0];
-            const task = getFnameField(fname, 'task');
-            /*const parts = fname.split('_');
-            const sub = parts[0];
-            let task = '';
-            parts.slice(1).forEach(part => {
-                if (part.startsWith('task-')) {
-                    task = part.substr(5);
-                }
-            });*/
-            return {
-                sub, task
-            }
-        }
     },
     props: {
         cohort: String

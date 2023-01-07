@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { getFnameField } from './../functions.js';
+import { enc, getFnameField } from './../functions.js';
 
 export const useCohortStore = defineStore("CohortStore", {
     state: () => {
@@ -84,4 +84,51 @@ export const useCohortStore = defineStore("CohortStore", {
         }
     },
     // actions
+    actions: {
+        fetchCohort(cohort) {
+            fetch(`/data/info?cohort=${enc(cohort)}`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.err) {
+                    console.log(json.err);
+                    return;
+                }
+                this.fc = this.parseFC(json.fc);
+                this.partial = this.parseFC(json.partial);
+                this.demo = json.demo;
+                this.subs = this.getSubs(json.demo);
+                this.weights = json.weights;
+                this.groups = [{query: 'All', 
+                    subs: this.subs.map(sub => sub.id)}];
+            })
+            .catch(err => console.log(err));
+        },
+        getSubs(demo) {
+            let subs = new Set();
+            for (let key in demo) {
+                Object.keys(demo[key]).forEach(
+                    sub => subs.add(sub));
+            }
+            subs = [...subs].map(sub => ({id: sub, selected: false}));
+            return subs;
+        },
+        parseFC(jsonfc) {
+            // id is just an index (from the map call)
+            jsonfc.sort();
+            return jsonfc.map((fname, idx) => {
+                return {
+                    id: idx, 
+                    fname: fname, 
+                    ...this.parseFname(fname) 
+                }
+            });
+        },
+        parseFname(fname) {
+            const sub = fname.split('_')[0];
+            const task = getFnameField(fname, 'task');
+            return {
+                sub, task
+            }
+        }
+    }
 });

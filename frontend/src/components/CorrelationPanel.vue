@@ -9,6 +9,15 @@
                 v-bind:src="'data:image/png;base64,'+imageData">
             <img v-if='pImageData' 
                 v-bind:src="'data:image/png;base64,'+pImageData">
+            <div v-if='isCorr'>
+                <div v-if='saveResp'>{{ saveResp }}</div>
+                <v-btn @click='saveImage("corr")' class='ml-4'>
+                    Save Image
+                </v-btn>
+                <v-btn @click='saveImage("p")' class='ml-4'>
+                    Save P-Value Image
+                </v-btn>
+            </div>
         </div>
         <v-row align='center' class='pa-4 pt-3 pb-3 ma-0'>
            <v-select 
@@ -58,6 +67,10 @@ export default {
             respVar: null,
             task: null,
             url: null,
+            isCorr: false,
+            rid: null,
+            pid: null,
+            saveResp: null
         };
     },
     setup() {
@@ -100,15 +113,30 @@ export default {
                     });
                     this.imageData = json.rdata;
                     this.pImageData = json.pdata;
-                    //this.store.display = "fc-corr";
+                    this.isCorr = true;
+                    this.rid = json.rid;
+                    this.pid = json.pid;
                 } else {
                     this.imageData = json.data;
                     this.pImageData = null;
-                    //this.store.display = "corr";
+                    this.isCorr = false;
                 }
             })
             .catch(err => this.error = err);
         },
+        saveImage(type) {
+            const id = type == 'corr' ? this.rid : this.pid;
+            fetch(`/analysis/corr/save?id=${id}`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.error) {
+                    this.saveResp = json.error;
+                    return;
+                }
+                this.saveResp = json.resp;
+            })
+            .catch(err => console.log(err));
+        }
     }
 }
 </script>

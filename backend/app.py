@@ -104,6 +104,22 @@ def fc():
     img = image.imshow(fc, colorbar)
     return jsonify({'data': img})
 
+''' Get subject SNPs '''
+@app.route('/data/snps', methods=(['GET']))
+def spns():
+    args = request.args
+    args_err = validate_args(['cohort', 'sub', 'set'], args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    sub = args['sub']
+    subset = args['set']
+    # Load and display histogram of SNP values
+    snps = data.get_snps('anton', coh, sub, subset)
+    img = image.snps_hist(snps)
+    return jsonify({'data': img})
+
 '''Get images of one demographic feature correlated with another'''
 @app.route('/analysis/corr/demo', methods=(['GET']))
 def corr_demo():
@@ -193,6 +209,23 @@ def corr_fc():
     pimg = image.imshow(p, colorbar=True, reverse_cmap=True)
     return jsonify({'rdata': rimg, 'rid': rid, 'pdata': pimg, 'pid': pid})
 
+'''Save a correlation image for equivalent functionality to model weights'''
+@app.route('/analysis/corr/save', methods=(['GET']))
+def corr_save():
+    args = request.args
+    args_err = validate_args(['id'], 
+        args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    di = args['id']
+    fcimg = session.load(di)
+    fcvec = data.mat2vec(fcimg)
+    fname = f'corr/id{di}.pkl'
+    wobj = dict(w=fcvec, noremap='true', trsubs=[], tsubs=[], desc='test')
+    data.save_weights(wobj, 'anton', 'test', fname)
+    return jsonify({'resp': fname})
+
 '''Perform image math'''
 @app.route('/math/image', methods=(['GET']))
 def imgmath():
@@ -257,7 +290,8 @@ def weights():
             feat = np.std(fcs, axis=0)
         w *= feat
     # Save weights, remapping first
-    if remap:
+    # Noremap on corr-generated weights
+    if remap and 'noremap' not in wobj:
         wimg = power.remap(data.vec2mat(w, fillones=False))
         w = data.mat2vec(wimg)
     else:

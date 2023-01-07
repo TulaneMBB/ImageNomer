@@ -6,28 +6,6 @@ import pandas as pd
 import sys
 from pathlib import Path
 
-'''
-Now a dictionary, see below
-class Weights:
-    def __init__(self, w, subs_tr, subs_t, desc):
-        self.w = self.to_numpy(w)
-        self.subs_tr = subs_tr
-        self.subs_t = subs_t
-        self.desc = desc
-        
-    def to_numpy(self, data):
-        if isinstance(data, torch.Tensor):
-            return data.detach().cpu().numpy()
-        elif isinstance(data, np.ndarray):
-            return data
-        else:
-            raise TypeError(data)
-            
-    def save(self, fname):
-        with open(fname, 'wb') as f:
-            pickle.dump(self, f)
-'''
-
 def d_from_vec(fc):
     n = fc.size
     return int(round((1+(1+8*n)**0.5)/2))
@@ -60,6 +38,10 @@ def has_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
 def get_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
     return np.load(get_fc_fname(user, cohort, sub, task, ses, typ))
 
+def get_snps(user, cohort, sub, subset):
+    fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
+    return np.load(fname)
+
 def get_demo(user, cohort, file=False):
     fname = f'data/{user}/cohorts/{cohort}/demographics.pkl'
     with open(fname, 'rb') as f:
@@ -75,6 +57,10 @@ def get_weights(user, cohort, fname):
     fname = f'data/{user}/cohorts/{cohort}/weights/{fname}'
     with open(fname, 'rb') as f:
         return pickle.load(f)
+
+def save_weights(wobj, user, cohort, fname):
+    with open(f'data/{user}/cohorts/{cohort}/weights/{fname}', 'wb') as f:
+        pickle.dump(wobj, f)
 
 def get_stats(typ, user, cohort, fnames):
     imgs = []

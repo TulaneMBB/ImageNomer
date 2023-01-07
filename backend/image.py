@@ -23,11 +23,14 @@ def mp_wrap(f, *args):
     p.join()
     return img
 
-def histogram(ys, ylabels, bins=20, density=True):
+def histogram(ys, ylabels=None, bins=20, density=True):
     fig, ax = plt.subplots()
-    for y, lab in zip(ys, ylabels):
-        ax.hist(y, label=lab, bins=bins, histtype='step')
-    ax.legend()
+    if ylabels is None:
+        ax.hist(ys, bins=bins)
+    else:
+        for y, lab in zip(ys, ylabels):
+            ax.hist(y, label=lab, bins=bins, histtype='step')
+        ax.legend()
     return tobase64(fig)
 
 def imshow_private(fc, colorbar=True, reverse_cmap=False):
@@ -68,6 +71,10 @@ def bar_private(data, labels):
     ax.tick_params(axis='x', labelrotation=-60)
     return tobase64(fig)
 
+# No labels, since this is single subject
+def snps_hist_private(data):
+    return histogram(data)
+
 # def plot_private(data, labels=None):
 #     fig, ax = plt.subplots()
 #     if isinstance(data, list):
@@ -96,6 +103,9 @@ def violin(data, labels, field):
 
 def bar(data, labels):
     return mp_wrap(bar_private, data, labels)
+
+def snps_hist(data):
+    return mp_wrap(snps_hist_private, data)
 
 # def plot(data, labels):
 #     return mp_wrap(plot_private, data, labels)
