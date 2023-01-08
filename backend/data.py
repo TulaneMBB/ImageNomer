@@ -38,6 +38,10 @@ def has_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
 def get_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
     return np.load(get_fc_fname(user, cohort, sub, task, ses, typ))
 
+def has_snps(user, cohort, sub, subset):
+    fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
+    return Path(fname).exists
+
 def get_snps(user, cohort, sub, subset):
     fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
     return np.load(fname)
@@ -62,7 +66,7 @@ def save_weights(wobj, user, cohort, fname):
     with open(f'data/{user}/cohorts/{cohort}/weights/{fname}', 'wb') as f:
         pickle.dump(wobj, f)
 
-def get_stats(typ, user, cohort, fnames):
+def get_conn_stats(typ, user, cohort, fnames):
     imgs = []
     ftype = fnames[0].split('_')[-1].split('.')[0]
     for fname in fnames:
@@ -74,6 +78,19 @@ def get_stats(typ, user, cohort, fnames):
         case 'mean': return np.mean(imgs, axis=0)
         case 'std': return np.std(imgs, axis=0)
 
+def get_snps_stats(user, cohort, fnames):
+    snps = []
+    for fname in fnames:
+        path = f'data/{user}/cohorts/{cohort}/snps/{fname}'
+        dat = np.load(path)
+        snps.append(dat)
+    snps = np.stack(snps)
+    miss = np.sum(np.isnan(snps), axis=1)
+    recv = np.sum(snps == 0, axis=1)
+    het = np.sum(snps == 1, axis=1)
+    homo = np.sum(snps == 2, axis=1)
+    return [miss, recv, het, homo]
+
 def get_top(data, n=20, rank='abs'):
     match rank:
         case 'abs': idcs = np.argsort(np.abs(data))
@@ -82,6 +99,25 @@ def get_top(data, n=20, rank='abs'):
     if n > len(idcs):
         n = len(idcs)
     return data[idcs[-1:-n:-1]], idcs[-1:-n:-1]
+
+def get_top_bot_snps(rho, idcs, n=10):
+    top = rho[:-n-1:-1]
+    top_idcs = idcs[:-n-1:-1]
+    bot = rho[n-1::-1]
+    bot_idcs = idcs[n-1::-1]
+    dat = np.concatenate([top, bot])
+    labs = np.concatenate([top_idcs, bot_idcs])
+    return dat, labs
+
+def relabel_snps(user, cohort, idcs, subset, labtype=None):
+    if labtype is None or labtype == 'indices':
+        return idcs
+    if labtype == 'rs':
+        fname = f'data/{user}/cohorts/{cohort}/snps_{subset}.pkl'
+        with open(fname, 'rb') as f:
+            st = pickle.load(f)
+        lst = list(st)
+        return [lst[i] for i in idcs]
 
 '''
 Combine all vars into one dict

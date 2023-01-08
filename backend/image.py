@@ -71,9 +71,38 @@ def bar_private(data, labels):
     ax.tick_params(axis='x', labelrotation=-60)
     return tobase64(fig)
 
-# No labels, since this is single subject
 def snps_hist_private(data):
-    return histogram(data)
+    fig, ax = plt.subplots()
+    data[np.isnan(data)] = -1
+    ax.hist(data, bins=[-1.5,-0.5,0.5,1.5,2.5], rwidth=0.8)
+    ax.set_xticks(ticks=[-1,0,1,2], 
+        labels=['Miss', 'Resv', 'Het', 'Dom'], 
+        fontsize=20)
+    ax.tick_params(axis='both', which='major', labelsize=20)
+    return tobase64(fig)
+
+def snps_violin_private(lst):
+    fig, ax = plt.subplots()
+    labels=['Miss', 'Resv', 'Het', 'Dom']
+    ax.violinplot(lst, positions=[-1,0,1,2])
+    ax.set_xticks([-1,0,1,2])
+    ax.set_xticklabels(labels)
+    ax.set_ylabel('# SNPs')
+    return tobase64(fig)
+
+def two_axes_plot_private(dat1, dat2, lab1, lab2):
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = iter(prop_cycle.by_key()['color'])
+    c1 = next(colors)
+    c2 = next(colors)
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    ax1.plot(np.arange(len(dat1)), dat1, color=c1)
+    ax2.plot(np.arange(len(dat1)), dat2, color=c2)
+    ax1.set_xlabel('SNP')
+    ax1.set_ylabel(lab1, color=c1)
+    ax2.set_ylabel(lab2, color=c2)
+    return tobase64(fig)
 
 # def plot_private(data, labels=None):
 #     fig, ax = plt.subplots()
@@ -106,6 +135,12 @@ def bar(data, labels):
 
 def snps_hist(data):
     return mp_wrap(snps_hist_private, data)
+
+def snps_violin(lst):
+    return mp_wrap(snps_violin_private, lst)
+
+def two_axes_plot(dat1, dat2, lab1, lab2):
+    return mp_wrap(two_axes_plot_private, dat1, dat2, lab1, lab2)
 
 # def plot(data, labels):
 #     return mp_wrap(plot_private, data, labels)

@@ -35,15 +35,23 @@
             </v-select>
             <v-select 
                 v-model='respVar'
-                :items="Object.keys(store.demo).concat(['fc','partial'])" 
+                :items="Object.keys(store.demo).concat(
+                    ['fc','partial','snps'])" 
                 label='Response Var' 
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
             <v-select
-                v-if='respVar == "fc" || respVar == "partial"'
+                v-if='["fc", "partial"].includes(respVar)'
                 v-model='task'
                 :items='["All"].concat(store.tasks(respVar))'
                 label='Task'
+                hide-details dense class='pa-0 ma-0 ml-4'>
+            </v-select>
+            <v-select 
+                v-if='respVar == "snps"'
+                v-model='set'
+                :items='store.snpsSets'
+                label='SNPs Sets'
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
             <v-btn @click='getCorr()' 
@@ -70,7 +78,8 @@ export default {
             isCorr: false,
             rid: null,
             pid: null,
-            saveResp: null
+            saveResp: null,
+            set: null,
         };
     },
     setup() {
@@ -81,6 +90,10 @@ export default {
     },
     methods: {
         getCorr() {
+            if (this.respVar == 'snps') {
+                this.getCorrSNPs();
+                return;
+            }
             const taskPart = (this.task == "All")
                 ? ""
                 : `&task=${enc(this.task)}`;
@@ -123,6 +136,21 @@ export default {
                 }
             })
             .catch(err => this.error = err);
+        },
+        getCorrSNPs() {
+            this.url = `/analysis/corr/snps?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10`;
+            fetch(this.url)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.err) {
+                    console.log(json.err);
+                    return;
+                }
+                this.imageData = json.rho;
+                this.pImageData = json.top;
+                this.isCorr = false;
+            })
+            .catch(err => console.log(err));
         },
         saveImage(type) {
             const id = type == 'corr' ? this.rid : this.pid;

@@ -5,6 +5,7 @@ export const useCohortStore = defineStore("CohortStore", {
     state: () => {
         return {
             fctype: 'fc',
+            snps: {},
             fc: [], 
             partial: [],
             demo: {},
@@ -15,7 +16,8 @@ export const useCohortStore = defineStore("CohortStore", {
             corr: null,
             p: null,
             saved: [],
-            labels: {}
+            labels: {},
+            mathImage: null,
         };
     },
     getters: {
@@ -23,13 +25,18 @@ export const useCohortStore = defineStore("CohortStore", {
         // NOTE: maybe required to say state['groups'] not state.groups
         groupSelected: (state) => {
             return (type, task) => {
-                return state[type].filter(item => {
+                const fcArr = type == 'snps' 
+                    ? state[type][task]
+                    : state[type];
+                return fcArr.filter(item => {
                     const groups = state['groups'];
                     for (let i=0; i<groups.length; i++) {
                         if (!groups[i].selected)
                             continue;
                         if (groups[i].subs.indexOf(item.sub) == -1) 
                             continue
+                        if (type == 'snps')
+                            return true;
                         return !task || task == 'All' || 
                             getFnameField(item.fname, 'task') == task;
                     }
@@ -45,6 +52,10 @@ export const useCohortStore = defineStore("CohortStore", {
                 if (!type) {
                     return subs;
                 }
+                if (type == 'snps') {
+                    return state[type][task]
+                    .filter(elt => subs.indexOf(elt.sub) != -1);
+                }
                 return state[type]
                     .filter(elt => {
                         return !task || task == 'All' 
@@ -52,6 +63,9 @@ export const useCohortStore = defineStore("CohortStore", {
                     })
                     .filter(elt => subs.indexOf(elt.sub) != -1);
             };
+        },
+        snpsSets: (state) => {
+            return Object.keys(state['snps']);
         },
         summary: (state) => {
             return (field) => {
@@ -95,6 +109,7 @@ export const useCohortStore = defineStore("CohortStore", {
                 }
                 this.fc = this.parseFC(json.fc);
                 this.partial = this.parseFC(json.partial);
+                this.snps = this.parseSNPs(json.snps);
                 this.demo = json.demo;
                 this.subs = this.getSubs(json.demo);
                 this.weights = json.weights;
@@ -129,6 +144,22 @@ export const useCohortStore = defineStore("CohortStore", {
             return {
                 sub, task
             }
+        },
+        parseSNPs(jsonsnps) {
+            // id is just an index
+            // set comes from json object key, unlike with task in FCs
+            for (let set in jsonsnps) {
+                jsonsnps[set] = jsonsnps[set]
+                .map((fname, idx) => {
+                    const sub = fname.split('_')[0];
+                    return {
+                        id: idx,
+                        fname,
+                        sub
+                    }
+                });
+            }
+            return jsonsnps;
         }
     }
 });

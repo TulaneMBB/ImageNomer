@@ -45,7 +45,9 @@ import { enc, savedImageType } from './../functions.js';
 export default {
     name: 'ImageMathPanel',
     created() {
-        if (this.saved.length > 0 
+        if (this.store.mathImage) {
+            this.imageData = this.store.mathImage;
+        } else if (this.saved.length > 0 
             && this.saved.at(-1).type.match(/stats/)) {
             this.expr = this.saved.at(-1).id;
             this.doImageMath();

@@ -3,17 +3,17 @@
         <v-btn-toggle class='padded' v-model='store.display'>
             <v-btn key='pheno' value='pheno'>Phenotypes</v-btn>
             <v-btn key='fc' value='fc'>FC</v-btn>
-            <v-btn key='corr' value='corr'>Correlation</v-btn>
+            <v-btn key='partial' value='partial'>Partial</v-btn>
+            <v-btn key='snps' value='snps'>SNPS</v-btn>
+            <v-btn key='corr' value='corr'>Feat Correlation</v-btn>
             <v-btn key='weights' value='weights'>Weights</v-btn>
             <v-btn key='math' value='math'>Image Math</v-btn>
-            <v-btn key='fmri' value='fmri'>fMRI</v-btn>
-            <v-btn key='smri' value='smri'>sMRI</v-btn>
         </v-btn-toggle>
     </div>
     <div v-if='store.display == "pheno"'>
         <PhenoPanel cohort='test'></PhenoPanel>
     </div>
-    <div v-else-if='store.display == "fc"'>
+    <div v-else-if='["fc", "partial", "snps"].includes(store.display)'>
         <FCPanel></FCPanel>
     </div>
     <div v-else-if='store.display == "corr"'>

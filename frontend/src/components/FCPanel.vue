@@ -3,19 +3,16 @@
     <div v-if='displayedFC.length > 0'>
         <v-card subtitle='Display Options'>
             <v-row align='center' class='pa-4'>
-                <v-radio-group 
-                    row 
-                    class='d-inline-flex' 
-                    v-model='store.fctype' 
-                    label='Type'>
-                    <v-radio 
-                        label='FC' 
-                        value='fc'></v-radio>
-                    <v-radio 
-                        label='Partial Correlation' 
-                        value='partial'></v-radio>
-                </v-radio-group>
                 <v-select
+                    v-if='store.display == "snps"'
+                    label='SNP Set'
+                    v-model='set'
+                    :items='store.snpsSets'
+                    dense
+                    class='d-inline-flex ma-0 pa-0 ml-4'>
+                </v-select>
+                <v-select
+                    v-if='["fc", "partial"].includes(store.display)'
                     label='Task'
                     v-model='task'
                     :items='["All"].concat(store.tasks("fc"))'
@@ -23,7 +20,7 @@
                     class='d-inline-flex ma-0 pa-0 ml-4'>
                 </v-select>
                 <v-checkbox
-                    v-for='field in ["ID","Task"].concat(Object.keys(store.demo))'
+                    v-for='field in checkboxFields'
                     :key="field" 
                     v-model="store.labels[field]" 
                     :label="field"
@@ -37,16 +34,39 @@
             :length="Math.ceil(filteredFC.length/NUM_FC_PAGE)"
             total-visible='10'>
         </v-pagination>
-        <FC 
-            v-for="fc in displayedFC"
-            :key="fc.id" cohort='test' :sub='fc.sub' :task='fc.task' remap>
-        </FC>
+        <div v-if='store.display == "snps"'>
+            <FC
+                v-for='snps in displayedFC'
+                :key="snps.id" :type='snps.type'
+                cohort='test' :sub='snps.sub' :set='set' remap>
+            </FC>
+        </div>
+        <div v-else-if='store.display == "partial"'>
+            <FC 
+                v-for="fc in displayedFC"
+                :key="fc.id" :type='fc.type'
+                cohort='test' :sub='fc.sub' :task='fc.task' remap>
+            </FC>
+        </div>
+        <div v-else-if='store.display == "fc"'>
+            <FC 
+                v-for="fc in displayedFC"
+                :key="fc.id" :type='fc.type'
+                cohort='test' :sub='fc.sub' :task='fc.task' remap>
+            </FC>
+        </div>
         <div class='text-body-2 ml-4'>
             Create summary image:
-            <v-btn @click='stats("mean")' 
-                class='ml-4'>Mean</v-btn>
-            <v-btn @click='stats("std")' 
-                class='ml-4'>Standard Deviation</v-btn>
+            <div v-if='["fc", "partial"].includes(store.display)'>
+                <v-btn @click='stats("mean")' 
+                    class='ml-4'>Mean</v-btn>
+                <v-btn @click='stats("std")' 
+                    class='ml-4'>Standard Deviation</v-btn>
+            </div>
+            <div v-if='store.display == "snps"'>
+                <v-btn @click='stats("snps")'
+                    class='ml-4'>Distribution</v-btn>
+            </div>
         </div>
     </div>
     <div v-else class='text-h6 ma-0 ml-2'>
@@ -65,6 +85,13 @@ export default {
         FC
     },
     computed: {
+        checkboxFields() {
+            const taskOrSet = this.store.display == 'snps' ? "Set" : "Task";
+            return ["ID",taskOrSet].concat(Object.keys(this.store.demo))
+        },
+        display() {
+            return this.store.display;
+        },
         displayedFC() {
             const fcs = this.filteredFC;
             const n = this.NUM_FC_PAGE;
@@ -73,11 +100,20 @@ export default {
         filteredFC() {
             let bygroup = this.store.groups
                 .reduce((acc, g) => acc || g.selected, false);
+            const taskOrSet = this.store.display == 'snps'
+                ? this.set : this.task;
             const fcs = bygroup
-                ? this.store.groupSelected(this.store.fctype, this.task)
-                : this.store.selected(this.store.fctype, this.task);
-            return fcs;
+                ? this.store.groupSelected(this.store.display, taskOrSet)
+                : this.store.selected(this.store.display, taskOrSet);
+            return fcs.map(fc => {
+                fc.type = this.store.display;
+                return fc;
+            });
         },
+    },
+    created() {
+        if (this.store.snpsSets.length > 0) 
+            this.set = this.store.snpsSets[0];
     },
     data() {
         return {
@@ -86,19 +122,12 @@ export default {
             task: 'All',
             loading: true,
             error: null,
+            set: '',
         }
     },
     methods: {
         stats(type) {
-            let groups = 
-                this.store.groups
-                .filter(g => g.selected)
-                .map(g => g.query).join(",");
-            const task = this.task;
             const fnames = this.filteredFC.map(fc => fc.fname);
-            if (!groups) {
-                groups = `custom ${fnames.length}`;
-            }
             const formData = new FormData();
             formData.append('type', type)
             formData.append('cohort', 'test');
@@ -115,12 +144,25 @@ export default {
                     this.error = json.err;
                     return;
                 }
-                this.store.saved.push({
-                    type: `stats-${type}-${this.store.fctype}`, 
-                    label: `(${json.id}) stats-${type}-${this.store.fctype} | groups: ${groups}, task: ${task}`, 
-                    data: json.data, 
-                    id: json.id,
-                });
+                if (['mean', 'std'].includes(type)) {
+                    const task = this.task;
+                    let groups = 
+                        this.store.groups
+                        .filter(g => g.selected)
+                        .map(g => g.query).join(",");
+                    if (!groups) {
+                        groups = `custom ${fnames.length}`;
+                    }
+                    this.store.saved.push({
+                        type: `stats-${type}-${this.store.display}`, 
+                        label: `(${json.id}) stats-${type}-${this.store.display} | groups: ${groups}, task: ${task}`, 
+                        data: json.data, 
+                        id: json.id,
+                    });
+                    this.store.mathImage = null;
+                } else if (type == 'snps') {
+                    this.store.mathImage = json.data;
+                }
                 this.store.display = 'math';
             });
         }
@@ -128,10 +170,17 @@ export default {
     setup() {
         const store = useCohortStore();
         return {
-            store
+            store,
         }
     },
     watch: {
+        display() {
+            if (['fc', 'partial'].includes(this.store.display)) {
+                this.store.labels['Set'] = false;
+            } else if (this.store.display == 'snps') {
+                this.store.labels['Task'] = false;
+            }
+        },
         task() {
             this.page = 1;
         },

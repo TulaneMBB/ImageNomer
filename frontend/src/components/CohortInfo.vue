@@ -38,8 +38,8 @@
         <v-card title='Groups' class='mb-2'>
             <v-card-subtitle>
                 Create groups based on phenotypes<br>
-                e.g., "age &gt; 180 and age &lt; 240"<br>
-                or "sex == 'F'"
+                e.g., "age &gt; 180"
+                or "sex == 'F' and age &lt; 200"
             </v-card-subtitle>
             <v-row align='center'>
                 <v-text-field

@@ -152,7 +152,6 @@ def corr_demo():
 def corr_fc():
     args = request.args
     # Optional: task, ses, thresh
-    # TODO: thresh
     args_err = validate_args(['cohort', 'query', 'field'], 
         args, request.url) 
     if args_err:
@@ -180,8 +179,7 @@ def corr_fc():
     for task in tasks:
         for sub in group:
             if data.has_fc('anton', coh, sub, task, ses, typ=typ):
-                if field is not None:
-                    pheno.append(df.loc[sub][field])
+                pheno.append(df.loc[sub][field])
                 fc = data.get_fc('anton', coh, sub, task, ses, typ=typ)
                 fcs.append(fc)
     fcs = np.stack(fcs)
@@ -225,6 +223,58 @@ def corr_save():
     wobj = dict(w=fcvec, noremap='true', trsubs=[], tsubs=[], desc='test')
     data.save_weights(wobj, 'anton', 'test', fname)
     return jsonify({'resp': fname})
+
+''' Correlate demographic features with SNPs '''
+@app.route('/analysis/corr/snps', methods=(['GET']))
+def corr_snps():
+    args = request.args
+    # Optional: labtype
+    args_err = validate_args(
+        ['cohort', 'query', 'field', 'set', 'n'], 
+        args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    query = args['query']
+    field = args['field']
+    subset = args['set']
+    n = int(args['n'])
+    labtype = args['labtype'] if 'labtype' in args else 'rs'
+    # Load demographics
+    demo = data.get_demo('anton', coh)
+    df = data.demo2df(demo)
+    # Load group
+    group = df.index if query == 'All' else df.query(query).index
+    # Get snps and pheno
+    snps = []
+    pheno = []
+    for sub in group:
+        if data.has_snps('anton', coh, sub, subset):
+            pheno.append(df.loc[sub][field])
+            snp = data.get_snps('anton', coh, sub, subset)
+            snps.append(snp)
+    snps = np.stack(snps)
+    # Zero heterozygous and set nans to zero
+    snps[np.isnan(snps)] = 1
+    snps = snps-1
+    # Get correlation and p-value
+    cat = 'M' if field == 'sex' else None
+    rho, p = correlation.corr_feat(snps, pheno, cat=cat)
+    # Get distribution image
+    # Display p-value as alternate axes on distribution image
+    idcs = np.argsort(rho)
+    print(idcs[-5:])
+    rho = rho[idcs]
+    p = p[idcs]
+    rho_img = image.two_axes_plot(
+        rho, p, 'Correlation', 'log(p-value)') # p-value already log
+    # Get top correlated SNPs
+    # Note sorting done above
+    top_bot, top_bot_idcs = data.get_top_bot_snps(rho, idcs, n)
+    labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, 'rs')
+    top_img = image.bar(top_bot, labs)
+    return jsonify({'rho': rho_img, 'top': top_img})
 
 '''Perform image math'''
 @app.route('/math/image', methods=(['GET']))
@@ -322,12 +372,17 @@ def imgtop():
     img = image.bar(vec, labels)
     return jsonify({'data': img})
 
-'''Get statistics image (mean or standard deviation)'''
+'''
+Get statistics image 
+Mean or standard deviation for FC/partial
+Or violin plot for SNPs
+'''
 @app.route('/analysis/stats', methods=(['POST']))
 def stats():
     args = request.form
+    # Optional: remap
     args_err = validate_args(
-        ['type', 'cohort', 'fnames', 'remap'], 
+        ['type', 'cohort', 'fnames'], 
         args, request.url)
     if args_err:
         return args_err
@@ -336,16 +391,24 @@ def stats():
     typ = args['type']
     fnames = json.loads(args['fnames'])
     remap = 'remap' in args
-    # Get FC images and calculate stat
-    res = data.get_stats(typ, 'anton', coh, fnames)
-    mat = data.vec2mat(res, fillones=False)
-    if remap:
-       mat = power.remap(mat)
-    # Save in cache
-    id = session.save(mat)
-    # Display and send to frontend
-    img = image.imshow(mat) 
-    return jsonify({'data': img, 'id': id})
+    # If mean or std dev
+    # Get FC/partial images and calculate stat
+    if typ in ['mean', 'std']:
+        res = data.get_conn_stats(typ, 'anton', coh, fnames)
+        mat = data.vec2mat(res, fillones=False)
+        if remap:
+           mat = power.remap(mat)
+        # Save in cache
+        id = session.save(mat)
+        # Display and send to frontend
+        img = image.imshow(mat) 
+        return jsonify({'data': img, 'id': id})
+    # If snps, make violin plot of missing, recessive, het, and dominant
+    # No saving in cache
+    elif typ == 'snps':
+        stats_lst = data.get_snps_stats('anton', coh, fnames)
+        img = image.snps_violin(stats_lst)
+        return jsonify({'data': img})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
