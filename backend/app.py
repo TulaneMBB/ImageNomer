@@ -230,7 +230,7 @@ def corr_snps():
     args = request.args
     # Optional: labtype
     args_err = validate_args(
-        ['cohort', 'query', 'field', 'set', 'n'], 
+        ['cohort', 'query', 'field', 'set', 'n', 'hap'], 
         args, request.url) 
     if args_err:
         return args_err
@@ -240,6 +240,7 @@ def corr_snps():
     field = args['field']
     subset = args['set']
     n = int(args['n'])
+    hap = int(args['hap'])
     labtype = args['labtype'] if 'labtype' in args else 'rs'
     # Load demographics
     demo = data.get_demo('anton', coh)
@@ -253,17 +254,16 @@ def corr_snps():
         if data.has_snps('anton', coh, sub, subset):
             pheno.append(df.loc[sub][field])
             snp = data.get_snps('anton', coh, sub, subset)
+            snp = snp == hap
             snps.append(snp)
     snps = np.stack(snps)
-    # Zero heterozygous and set nans to zero
-    snps[np.isnan(snps)] = 1
-    snps = snps-1
     # Get correlation and p-value
     cat = 'M' if field == 'sex' else None
     rho, p = correlation.corr_feat(snps, pheno, cat=cat)
     # Get distribution image
     # Display p-value as alternate axes on distribution image
     idcs = np.argsort(rho)
+    print(idcs[:5])
     print(idcs[-5:])
     rho = rho[idcs]
     p = p[idcs]
@@ -272,7 +272,7 @@ def corr_snps():
     # Get top correlated SNPs
     # Note sorting done above
     top_bot, top_bot_idcs = data.get_top_bot_snps(rho, idcs, n)
-    labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, 'rs')
+    labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, labtype)
     top_img = image.bar(top_bot, labs)
     return jsonify({'rho': rho_img, 'top': top_img})
 
@@ -293,9 +293,9 @@ def imgmath():
     img = image.imshow(res, colorbar=True)
     return jsonify({'data': img})
 
-''' Get weights data '''
-@app.route('/data/weights', methods=(['GET']))
-def weights():
+''' Get weights data for FC or Partial Corr'''
+@app.route('/data/weights/fc', methods=(['GET']))
+def weights_fc():
     args = request.args
     # Optional session, mult, task, query, remap
     args_err = validate_args(['cohort', 'fname'], 
@@ -311,8 +311,6 @@ def weights():
     query = args['query'] if 'query' in args else 'All'
     remap = 'remap' in args
     # Get weights
-    # TODO non-FC or image features
-    # TODO remap as wobj field
     wobj = data.get_weights('anton', coh, fname)
     w = wobj['w']
     # If multiplying, load subject features
@@ -354,6 +352,43 @@ def weights():
         'ntrain': len(wobj['trsubs']), 
         'ntest': len(wobj['tsubs']),
         'w': img})
+
+''' Get weights data for FC or Partial Corr'''
+@app.route('/data/weights/snps', methods=(['GET']))
+def weights_snps():
+    args = request.args
+    args_err = validate_args(
+        ['cohort', 'fname', 'hap', 'n', 'labtype', 'set'], 
+        args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    fname = args['fname']
+    hap = int(args['hap'])
+    n = int(args['n'])
+    labtype = args['labtype']
+    subset = args['set']
+    # Get weights
+    wobj = data.get_weights('anton', coh, fname)
+    w = wobj['w'].reshape(-1)
+    # Get part by haptype and sort
+    d = int(len(w)/3)
+    part = w[hap*d:(hap+1)*d]
+    idcs = np.argsort(part)
+    part = part[idcs]
+    # Display distribution
+    img = image.plot(part)
+    # Get top bot image
+    top_bot, top_bot_idcs = data.get_top_bot_snps(part, idcs, n)
+    labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, labtype)
+    top_img = image.bar(top_bot, labs)
+    return jsonify({
+        'desc': wobj['desc'], 
+        'ntrain': len(wobj['trsubs']), 
+        'ntest': len(wobj['tsubs']),
+        'w': img,
+        'top': top_img})
 
 ''' Bar graph of top values '''
 @app.route('/image/top', methods=(['GET']))

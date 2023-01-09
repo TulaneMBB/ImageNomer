@@ -104,17 +104,17 @@ def two_axes_plot_private(dat1, dat2, lab1, lab2):
     ax2.set_ylabel(lab2, color=c2)
     return tobase64(fig)
 
-# def plot_private(data, labels=None):
-#     fig, ax = plt.subplots()
-#     if isinstance(data, list):
-#         if labels is None:
-#             labels = len(data)*[None]
-#         for d,lab in zip(data, labels):
-#             ax.plot(d, label=lab)
-#     else:
-#         ax.plot(data)
-#     ax.legend()
-#     return tobase64(fig)
+def plot_private(data, labels=None):
+    fig, ax = plt.subplots()
+    if isinstance(data, list):
+        if labels is None:
+            labels = len(data)*[None]
+        for d,lab in zip(data, labels):
+            ax.plot(d, label=lab)
+        ax.legend()
+    else:
+        ax.plot(data)
+    return tobase64(fig)
 
 # Weird stuff with matplotlib and multithreading? crashes the process
 # Can fix with mutliprocessing
@@ -142,5 +142,5 @@ def snps_violin(lst):
 def two_axes_plot(dat1, dat2, lab1, lab2):
     return mp_wrap(two_axes_plot_private, dat1, dat2, lab1, lab2)
 
-# def plot(data, labels):
-#     return mp_wrap(plot_private, data, labels)
+def plot(data, labels=None):
+    return mp_wrap(plot_private, data, labels)

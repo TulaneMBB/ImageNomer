@@ -110,14 +110,15 @@ def get_top_bot_snps(rho, idcs, n=10):
     return dat, labs
 
 def relabel_snps(user, cohort, idcs, subset, labtype=None):
-    if labtype is None or labtype == 'indices':
+    if labtype is None or labtype == 'index':
         return idcs
     if labtype == 'rs':
         fname = f'data/{user}/cohorts/{cohort}/snps_{subset}.pkl'
         with open(fname, 'rb') as f:
             st = pickle.load(f)
         lst = list(st)
-        return [lst[i] for i in idcs]
+        res = [lst[i] for i in idcs]
+        return res
 
 '''
 Combine all vars into one dict

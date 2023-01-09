@@ -54,6 +54,20 @@
                 label='SNPs Sets'
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
+            <v-select
+                v-if='respVar == "snps"'
+                v-model='hap'
+                :items='["0:Minor","1:Het","2:Major"]'
+                label='Haplotype'
+                hide-details dense class='pa-0 ma-0 ml-4'>
+            </v-select>
+            <v-select
+                v-if='respVar == "snps"'
+                v-model='labtype'
+                :items='["rs", "index"]'
+                label='Label Type'
+                hide-details dense class='pa-0 ma-0 ml-4'>
+            </v-select>
             <v-btn @click='getCorr()' 
                 key='go' value='Go' class='ml-4 mr-0'>Go</v-btn>
         </v-row>
@@ -80,6 +94,8 @@ export default {
             pid: null,
             saveResp: null,
             set: null,
+            hap: "0:Minor",
+            labtype: "index",
         };
     },
     setup() {
@@ -138,7 +154,8 @@ export default {
             .catch(err => this.error = err);
         },
         getCorrSNPs() {
-            this.url = `/analysis/corr/snps?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10`;
+            const hap = this.hap[0];
+            this.url = `/analysis/corr/snps?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10&hap=${enc(hap)}&labtype=${enc(this.labtype)}`;
             fetch(this.url)
             .then(resp => resp.json())
             .then(json => {

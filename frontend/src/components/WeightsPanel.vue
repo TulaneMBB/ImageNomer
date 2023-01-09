@@ -4,6 +4,14 @@
         subtitle='Compare model weights from analysis runs'
         class='mb-2'
     >
+        <!--<v-row align='center' class='ma-0 ml-4 mr-4 mb-4 pa-0'>
+            <v-select
+                label='
+        </v-row>-->
+        <v-btn-toggle v-model='wtype' class='mb-4'>
+            <v-btn key='fc' value='fc'>FC/Partial</v-btn>
+            <v-btn key='snps' value='snps'>SNPs</v-btn>
+        </v-btn-toggle>
         <v-row align='center' class='ma-0 ml-4 mr-4 mb-4 pa-0'>
             <v-breadcrumbs divider='>'>
                 <v-breadcrumbs-item 
@@ -28,7 +36,9 @@
                 class='ma-0 pa-0'>
             </v-select>
         </v-row>
-        <v-row align='center' class='ma-0 ml-4 mr-4 pa-0'>
+        <v-row 
+            v-if='wtype == "fc"'
+            align='center' class='ma-0 ml-4 mr-4 pa-0'>
             <v-select
                 label='Multiply by Features'
                 v-model='mult'
@@ -54,7 +64,9 @@
                 class='ma-0 pa-0'>
             </v-select>
         </v-row>
-        <v-row align='center' class='ma-0 ml-4 mr-4 pa-0'>
+        <v-row
+            v-if='wtype == "fc"'
+            align='center' class='ma-0 ml-4 mr-4 pa-0'>
             <v-radio-group row v-model='labtype' @change='getTop()' label='Label Type'>
                 <v-radio label='Raw' value='raw'></v-radio>
                 <v-radio label='ROIs' value='rois'></v-radio>
@@ -65,6 +77,38 @@
                 <v-radio label='Positive' value='pos'></v-radio>
                 <v-radio label='Negative' value='neg'></v-radio>
             </v-radio-group>
+            <v-col>
+                <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
+                </v-slider>
+            </v-col>
+        </v-row>
+        <v-row
+            v-else-if='wtype == "snps"'
+            align='center' class='ma-0 ml-4 mr-4 pa-0'>
+            <v-select
+                label='SNPs Set'
+                v-model='set'
+                :items='store.snpsSets'
+                @change='loadWeights'
+                dense
+                class='ma-0 pa-0 ml-4'>
+            </v-select>
+            <v-select
+                label='Haplotype'
+                v-model='hap'
+                :items='["0:Minor", "1:Het", "2:Major"]'
+                @change='loadWeights'
+                dense
+                class='ma-0 pa-0 ml-4'>
+            </v-select>
+            <v-select
+                label='Label Type'
+                v-model='labtype'
+                :items='["rs", "index"]'
+                @change='loadWeights'
+                dense
+                class='ma-0 pa-0 ml-4'>
+            </v-select>
             <v-col>
                 <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
                 </v-slider>
@@ -104,6 +148,7 @@ export default {
     },
     data() {
         return {
+            wtype: 'fc',
             fname: '',
             error: null,
             desc: '',
@@ -120,6 +165,8 @@ export default {
             dirSel: null,
             dirPath: ["/"],
             dirFiles: [],
+            hap: "0:Minor",
+            set: null,
         }
     },
     methods: {
@@ -161,7 +208,15 @@ export default {
             if (!this.fname) return;
             const fname = this.dirPath.slice(1).concat([this.fname]).join('/');
             console.log(fname);
-            fetch(`/data/weights?cohort=test&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap`)
+            let url = null;
+            if (this.wtype == 'fc') {
+                url = `/data/weights/fc?cohort=test&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap`;
+            } else {
+                if (!this.set) return;
+                const hap = this.hap[0];
+                url = `/data/weights/snps?cohort=test&fname=${enc(fname)}&n=${enc(this.ntop)}&set=${enc(this.set)}&hap=${enc(hap)}&labtype=${enc(this.labtype)}`;
+            }
+            fetch(url)
             .then(resp => resp.json())
             .then(json => {
                 if (json.err) {
@@ -173,10 +228,14 @@ export default {
                 this.ntrain = json.ntrain;
                 this.ntest = json.ntest;
                 this.w = json.w;
-                this.getTop();
+                if (this.wtype == 'fc')
+                    this.getTop();
+                else if (this.wtype == 'snps') {
+                    this.topdata = json.top;
+                }
             })
             .catch(err => console.log(err));
-        }
+        },
     },
     setup() {
         const store = useCohortStore();
@@ -190,7 +249,18 @@ export default {
             this.changeDir();
         },
         ntop() {
-            this.getTop();
+            if (this.wtype == 'fc') 
+                this.getTop();
+            else if (this.wtype == 'snps')
+                this.loadWeights();
+        },
+        wtype() {
+            this.w = null;
+            this.topdata = null;
+            if (this.wtype == 'fc') 
+                this.labtype = 'raw';
+            else if (this.wtype == 'snps')
+                this.labtype = 'index';
         }
     }
 }

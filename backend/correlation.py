@@ -14,8 +14,8 @@ def corr_feat(feats, var, cat=None, typ='Pearson', bonf=True):
     if isinstance(feats, list):
         feats = np.stack(feats)
     mu = np.mean(feats, axis=0, keepdims=True)
-    feats -= mu
-    var -= np.mean(var)
+    feats = feats - mu
+    var = var - np.mean(var)
     if typ == 'Spearman':
        # Convert to ranks
        feats = np.argsort(feats)
@@ -25,6 +25,8 @@ def corr_feat(feats, var, cat=None, typ='Pearson', bonf=True):
     sigma_ff = np.einsum('ab,ab->b',feats,feats)
     sigma_vv = np.einsum('a,a->',var,var)
     rho = sigma_fv/(sigma_ff*sigma_vv)**0.5
+    # Sometimes happens with SNPs
+    rho[np.isnan(rho)] = 0
     # Get t distribution
     n = feats.shape[0]
     m = feats.shape[1]
