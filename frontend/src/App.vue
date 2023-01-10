@@ -33,8 +33,8 @@ export default {
 
 <style>
 .v-main {
-    font-size: 14px;
-    padding: 20px;
+    font-size: 12px;
+    padding: 10px;
 }
 .no-display {
     display: none;
