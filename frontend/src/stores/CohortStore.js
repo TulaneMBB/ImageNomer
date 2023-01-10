@@ -10,6 +10,7 @@ export const useCohortStore = defineStore("CohortStore", {
             partial: [],
             demo: {},
             weights: [],
+            decomp: [],
             subs: [],
             groups: [],
             display: null,
@@ -115,6 +116,7 @@ export const useCohortStore = defineStore("CohortStore", {
                 this.weights = json.weights;
                 this.groups = [{query: 'All', 
                     subs: this.subs.map(sub => sub.id)}];
+                this.decomp = json.decomp;
             })
             .catch(err => console.log(err));
         },

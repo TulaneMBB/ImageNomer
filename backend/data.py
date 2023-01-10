@@ -5,6 +5,8 @@ import pickle
 import pandas as pd
 import sys
 from pathlib import Path
+import re
+from operator import itemgetter
 
 def d_from_vec(fc):
     n = fc.size
@@ -108,6 +110,35 @@ def get_top_bot_snps(rho, idcs, n=10):
     dat = np.concatenate([top, bot])
     labs = np.concatenate([top_idcs, bot_idcs])
     return dat, labs
+
+def get_comp(user, coh, name, n):
+    fname = f'data/{user}/cohorts/{coh}/decomp/{name}-comps/{name}_comp-{n}.npy'
+    return np.load(fname)
+
+def get_var_exp(user, coh, name):
+    pcomps = Path(f'data/{user}/cohorts/{coh}/decomp/{name}-comps')
+    pweights = Path(f'data/{user}/cohorts/{coh}/decomp/{name}-weights')
+    comps = []
+    for c in pcomps.iterdir():
+        mobj = re.match(f'{name}_comp-([0-9]+).npy', c.name)
+        if mobj:
+            cnp = np.load(str(c))
+            cnp = cnp.reshape(-1)
+            comps.append((cnp, int(mobj.group(1))))
+    comps.sort(key=itemgetter(1))
+    comps = np.stack([c[0] for c in comps])
+    comps = np.mean(np.abs(comps), axis=1)
+    ws = []
+    for w in pweights.iterdir():
+        if re.match(f'.*{name}_weights.npy', w.name):
+            wnp = np.load(str(w))
+            wnp = wnp.reshape(-1)
+            ws.append(wnp)
+    ws = np.stack(ws)
+    ws = np.mean(np.abs(ws), axis=0)
+    var_exp = ws*comps
+    var_exp = var_exp/np.sum(var_exp)
+    return np.sort(var_exp)[::-1]
 
 def relabel_snps(user, cohort, idcs, subset, labtype=None):
     if labtype is None or labtype == 'index':

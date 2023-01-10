@@ -445,5 +445,50 @@ def stats():
         img = image.snps_violin(stats_lst)
         return jsonify({'data': img})
 
+'''
+Get component of dictionary
+'''
+@app.route('/data/component', methods=(['GET']))
+def component():
+    args = request.args
+    # Optional: remap
+    args_err = validate_args(
+        ['name', 'cohort', 'n'], 
+        args, request.url)
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    name = args['name']
+    n = int(args['n']) 
+    remap = 'remap' in args
+    # Get component, remap, and show as image
+    comp = data.get_comp('anton', coh, name, n)
+    cimg = data.vec2mat(comp, fillones=False)
+    if remap:
+        cimg = power.remap(cimg)
+    img = image.imshow(cimg, colorbar=True)
+    return jsonify({'data': img})
+
+'''
+Get variance explained by components of a decomposition
+'''
+@app.route('/data/decomp/varexp', methods=(['GET']))
+def decomp_varexp():
+    args = request.args
+    # Optional: remap
+    args_err = validate_args(
+        ['name', 'cohort'], 
+        args, request.url)
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    name = args['name']
+    # Get variance explained by component and also the number of components
+    varexp = data.get_var_exp('anton', coh, name)
+    img = image.plot(varexp)
+    return jsonify({'data': img})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
