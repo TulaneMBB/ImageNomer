@@ -23,12 +23,36 @@ def mp_wrap(f, *args):
     p.join()
     return img
 
+def has_many_rare(y):
+    yset = set()
+    for yy in y:
+        yset.add(yy)
+    return len(yset) > 10
+
+def collapse_rare(y):
+    counts = dict()
+    tot = 0
+    for yy in y:
+        if yy not in counts:
+            counts[yy] = 1
+        else:
+            counts[yy] += 1
+        tot += 1
+    for i in range(len(y)):
+        if counts[y[i]] < 0.02*tot:
+            y[i] = 'other'
+    return y
+
 def histogram(ys, ylabels=None, bins=20, density=True):
     fig, ax = plt.subplots()
     if ylabels is None:
         ax.hist(ys, bins=bins)
     else:
         for y, lab in zip(ys, ylabels):
+            # If categorical histogram, and many different distinct values,
+            # Put less that 2% in other category
+            if isinstance(y[0], str) and has_many_rare(y):
+                collapse_rare(y)
             ax.hist(y, label=lab, bins=bins, histtype='step')
         ax.legend()
     return tobase64(fig)
@@ -68,6 +92,12 @@ def bar_private(data, labels):
     fig, ax = plt.subplots()
     x = np.arange(len(data))
     ax.bar(x, height=data, tick_label=labels)
+    ax.tick_params(axis='x', labelrotation=-60)
+    return tobase64(fig)
+
+def boxplot_private(data, labels):
+    fig, ax = plt.subplots()
+    ax.boxplot(data, labels=labels)
     ax.tick_params(axis='x', labelrotation=-60)
     return tobase64(fig)
 
@@ -116,6 +146,11 @@ def plot_private(data, labels=None):
         ax.plot(data)
     return tobase64(fig)
 
+def fill_between_private(bot, top):
+    fig, ax = plt.subplots()
+    ax.fill_between(np.arange(bot.shape[0]), bot, y2=top, alpha=1)
+    return tobase64(fig)
+
 # Weird stuff with matplotlib and multithreading? crashes the process
 # Can fix with mutliprocessing
 def imshow(fc, colorbar=True, reverse_cmap=False):
@@ -144,3 +179,9 @@ def two_axes_plot(dat1, dat2, lab1, lab2):
 
 def plot(data, labels=None):
     return mp_wrap(plot_private, data, labels)
+
+def fill_between(bot, top):
+    return mp_wrap(fill_between_private, bot, top)
+
+def boxplot(data, labels):
+    return mp_wrap(boxplot_private, data, labels)

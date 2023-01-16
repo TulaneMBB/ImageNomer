@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 import re
 from operator import itemgetter
+import math
 
 def d_from_vec(fc):
     n = fc.size
@@ -64,6 +65,21 @@ def get_weights(user, cohort, fname):
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
+def get_weights_dir(user, cohort, fname, wobj):
+    p = Path(fname).parts[:-1]
+    basedir = f'data/{user}/cohorts/{cohort}/weights'
+    p = [basedir] + list(p)
+    p = Path('/'.join(p))
+    ws = []
+    for f in p.iterdir():
+        if f.is_dir():
+            continue
+        with open(f, 'rb') as ff:
+            dct = pickle.load(ff)
+            if dct['w'].shape == wobj['w'].shape:
+                ws.append(dct['w'])
+    return np.stack(ws)
+
 def save_weights(wobj, user, cohort, fname):
     with open(f'data/{user}/cohorts/{cohort}/weights/{fname}', 'wb') as f:
         pickle.dump(wobj, f)
@@ -102,14 +118,21 @@ def get_top(data, n=20, rank='abs'):
         n = len(idcs)
     return data[idcs[-1:-n:-1]], idcs[-1:-n:-1]
 
-def get_top_bot_snps(rho, idcs, n=10):
-    top = rho[:-n-1:-1]
-    top_idcs = idcs[:-n-1:-1]
-    bot = rho[n-1::-1]
-    bot_idcs = idcs[n-1::-1]
-    dat = np.concatenate([top, bot])
-    labs = np.concatenate([top_idcs, bot_idcs])
-    return dat, labs
+# def get_top_bot_snps(rho, idcs, n=10):
+#     top = rho[:-n-1:-1]
+#     top_idcs = idcs[:-n-1:-1]
+#     bot = rho[n-1::-1]
+#     bot_idcs = idcs[n-1::-1]
+#     dat = np.concatenate([top, bot])
+#     labs = np.concatenate([top_idcs, bot_idcs])
+#     return dat, labs
+
+def get_quartiles(ws):
+    ws = np.sort(ws, axis=0)
+    n = ws.shape[0]
+    q1 = math.floor(0.25*n)
+    q3 = math.floor(0.75*n)
+    return ws[int(q1)], ws[int(q3)]
 
 def get_comp(user, coh, name, n):
     fname = f'data/{user}/cohorts/{coh}/decomp/{name}-comps/{name}_comp-{n}.npy'

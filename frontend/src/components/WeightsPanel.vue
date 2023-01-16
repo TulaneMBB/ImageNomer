@@ -77,10 +77,8 @@
                 <v-radio label='Positive' value='pos'></v-radio>
                 <v-radio label='Negative' value='neg'></v-radio>
             </v-radio-group>
-            <v-col>
-                <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
-                </v-slider>
-            </v-col>
+            <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
+            </v-slider>
         </v-row>
         <v-row
             v-else-if='wtype == "snps"'
@@ -109,15 +107,17 @@
                 dense
                 class='ma-0 pa-0 ml-4'>
             </v-select>
-            <v-col>
-                <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
-                </v-slider>
-            </v-col>
+            <v-slider label='Number' v-model='ntop' min='3' max='30' step='1'>
+            </v-slider>
+            <v-checkbox v-model='avg' label='Average' class='pa-0 ma-0'></v-checkbox>
+            <v-checkbox v-model='limiqr' label='Limit IQR' class='pa-0 ma-0'></v-checkbox>
         </v-row>
         <div v-if='fname' class='text-h6 text-center ml-4'>
             <div>{{ desc }}</div>
-            <div v-if='mult != "no"'>Product of weights and {{ mult }}</div>
-            <div v-else>Raw weights</div>
+            <div v-if='wtype == "fc" && !avg'>
+                <div v-if='mult != "no"'>Product of weights and {{ mult }}</div>
+                <div v-else>Raw weights</div>
+            </div>
             <v-row align='center' justify='center' class='my-4'>
                 <img v-bind:src="'data:image/png;base64,'+w">
                 <img v-if='topdata' v-bind:src="'data:image/png;base64,'+topdata">
@@ -167,6 +167,8 @@ export default {
             dirFiles: [],
             hap: "0:Minor",
             set: null,
+            avg: null,
+            limiqr: false,
         }
     },
     methods: {
@@ -209,12 +211,14 @@ export default {
             const fname = this.dirPath.slice(1).concat([this.fname]).join('/');
             console.log(fname);
             let url = null;
+            const avg = this.avg ? "&average" : "";
+            const limiqr = this.limiqr ? "&limiqr" : "";
             if (this.wtype == 'fc') {
-                url = `/data/weights/fc?cohort=test&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap`;
+                url = `/data/weights/fc?cohort=test&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap${avg}`;
             } else {
                 if (!this.set) return;
                 const hap = this.hap[0];
-                url = `/data/weights/snps?cohort=test&fname=${enc(fname)}&n=${enc(this.ntop)}&set=${enc(this.set)}&hap=${enc(hap)}&labtype=${enc(this.labtype)}`;
+                url = `/data/weights/snps?cohort=test&fname=${enc(fname)}&n=${enc(this.ntop)}&set=${enc(this.set)}&hap=${enc(hap)}&labtype=${enc(this.labtype)}${avg}${limiqr}`;
             }
             fetch(url)
             .then(resp => resp.json())

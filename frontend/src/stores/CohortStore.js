@@ -85,6 +85,29 @@ export const useCohortStore = defineStore("CohortStore", {
                         else if (val == 'F') f++;
                     });
                     return `male: ${m} female: ${f} (n=${vals.length})`
+                } else {
+                    // Should contain the above as a special case
+                    // Count number of distinct values
+                    const valset = new Set();
+                    const valcounts = {};
+                    const valcounts2 = [];
+                    vals.forEach(v => valset.add(v));
+                    valset.forEach(v => {
+                        valcounts[v] = 0;
+                    });
+                    vals.forEach(v => {
+                        valcounts[v]++;
+                    });
+                    for (let v in valcounts) {
+                        valcounts2.push([v, valcounts[v]]);
+                    }
+                    valcounts2.sort((a,b) => b[1] - a[1]);
+                    let sum = valcounts2.slice(0,5).map(vc => `${vc[0]}: ${vc[1]}`).join(' ');
+                    if (valcounts2.length > 5) {
+                        sum += `... (${valcounts2.length-5} others)`;
+                    }
+                    sum += ` (n = ${vals.length})`
+                    return sum;
                 }
             }
         },

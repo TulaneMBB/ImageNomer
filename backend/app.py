@@ -263,8 +263,6 @@ def corr_snps():
     # Get distribution image
     # Display p-value as alternate axes on distribution image
     idcs = np.argsort(rho)
-    print(idcs[:5])
-    print(idcs[-5:])
     rho = rho[idcs]
     p = p[idcs]
     rho_img = image.two_axes_plot(
@@ -357,6 +355,9 @@ def weights_fc():
 @app.route('/data/weights/snps', methods=(['GET']))
 def weights_snps():
     args = request.args
+    # Optional: AVERAGE, limvar
+    # Average takes average of all compatible files in the directory
+    # limvar means max q1-q3 range is 3x average
     args_err = validate_args(
         ['cohort', 'fname', 'hap', 'n', 'labtype', 'set'], 
         args, request.url) 
@@ -369,20 +370,65 @@ def weights_snps():
     n = int(args['n'])
     labtype = args['labtype']
     subset = args['set']
+    avg = 'average' in args
+    limiqr = 'limiqr' in args
     # Get weights
     wobj = data.get_weights('anton', coh, fname)
-    w = wobj['w'].reshape(-1)
+    # If average, get all compatible in directory
+    # RESHAPE because of sklearn coef_ dimensions
+    if avg:
+        ws = data.get_weights_dir('anton', coh, fname, wobj)
+        ws = ws.reshape(ws.shape[0], -1)
+        w = np.mean(ws, axis=0)
+    else:
+        w = wobj['w'].reshape(-1)
     # Get part by haptype and sort
     d = int(len(w)/3)
-    part = w[hap*d:(hap+1)*d]
-    idcs = np.argsort(part)
-    part = part[idcs]
+    w = w[hap*d:(hap+1)*d]
+    if avg:
+        ws = ws[:,hap*d:(hap+1)*d]
+    idcs = np.argsort(w)
     # Display distribution
-    img = image.plot(part)
-    # Get top bot image
-    top_bot, top_bot_idcs = data.get_top_bot_snps(part, idcs, n)
+    if avg:
+        # Get quartiles
+        q1,q3 = data.get_quartiles(ws[:,idcs])
+        qmean = np.mean(q3-q1)
+        # Plot whole distribution
+        img = image.fill_between(q1, q3)
+        # Limit SNPs by interquartile range or not
+        if limiqr:
+            bidcs = []
+            tidcs = []
+            for i in range(50):
+                db = q3[i]-q1[i]
+                dt = q3[-i-1]-q1[-i-1]
+                if db < 2*qmean:
+                    bidcs.append(idcs[i])
+                if dt < 2*qmean:
+                    tidcs.append(idcs[-i-1])
+            bidcs = bidcs[:n]
+            tidcs = tidcs[:n][::-1]
+        else:
+            bidcs = idcs[:n]
+            tidcs = idcs[-n:]
+        # Get top SNP features
+        top_bot_idcs = np.concatenate([bidcs,tidcs])
+        top_bot = ws[:,top_bot_idcs]
+    else:
+        # Plot whole distribution
+        img = image.plot(w[idcs])
+        # Get top SNP features
+        bidcs = idcs[:n]
+        tidcs = idcs[-n:]
+        top_bot_idcs = np.concatenate([bidcs,tidcs])
+        top_bot = w[top_bot_idcs]
+    # top_bot, top_bot_idcs = data.get_top_bot_snps(part, idcs, n)
     labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, labtype)
-    top_img = image.bar(top_bot, labs)
+    if avg:
+        # top_bot_ws, _ = data.get_top_bot_snps(ws.transpose(1,0), idcs, n)
+        top_img = image.boxplot(top_bot, labs)
+    else:
+        top_img = image.bar(top_bot, labs)
     return jsonify({
         'desc': wobj['desc'], 
         'ntrain': len(wobj['trsubs']), 

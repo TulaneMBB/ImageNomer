@@ -11,7 +11,7 @@
         </span>
         <div style='float: right'>
             <a href='#'>GitHub</a>
-            <a href='#'>Report Bugs</a>
+            <a href='#'>Bugs</a>
             <a href='#'>Settings</a>
             <span style='margin-left: 10px;'>
                 Logged in: <a href='#'>Anton</a>
@@ -41,13 +41,13 @@ export default {
 
 <style scope>
 #imagenomer-h {
-    background-color: #fee;
+    /*background-color: #fee;*/
     border: 1px solid #ddd;
     padding: 5px;
     padding-left: 10px;
     padding-right: 10px;
     margin-bottom: 10px;
-    border-radius: 2px;
+    border-radius: 3px;
 }
 #imagenomer-h a {
     margin-left: 5px;
