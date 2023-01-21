@@ -151,7 +151,7 @@ def corr_demo():
 @app.route('/analysis/corr/fc', methods=(['GET']))
 def corr_fc():
     args = request.args
-    # Optional: task, ses, thresh
+    # Optional: task, ses, thresh, cat
     args_err = validate_args(['cohort', 'query', 'field'], 
         args, request.url) 
     if args_err:
@@ -165,6 +165,7 @@ def corr_fc():
     thresh = args['thresh'] if 'thresh' in args else None
     remap = 'remap' in args
     typ = args['fctype']
+    cat = args['cat'] if 'cat' in args else None
     # Load demographics
     demo = data.get_demo('anton', coh)
     df = data.demo2df(demo)
@@ -179,7 +180,10 @@ def corr_fc():
     for task in tasks:
         for sub in group:
             if data.has_fc('anton', coh, sub, task, ses, typ=typ):
-                pheno.append(df.loc[sub][field])
+                p = df.loc[sub][field]
+                if cat is not None:
+                    p = p == cat
+                pheno.append(p)
                 fc = data.get_fc('anton', coh, sub, task, ses, typ=typ)
                 fcs.append(fc)
     fcs = np.stack(fcs)
@@ -263,16 +267,112 @@ def corr_snps():
     # Get distribution image
     # Display p-value as alternate axes on distribution image
     idcs = np.argsort(rho)
-    rho = rho[idcs]
     p = p[idcs]
     rho_img = image.two_axes_plot(
-        rho, p, 'Correlation', 'log(p-value)') # p-value already log
+        rho[idcs], p, 'Correlation', 'log(p-value)') # p-value already log
     # Get top correlated SNPs
     # Note sorting done above
-    top_bot, top_bot_idcs = data.get_top_bot_snps(rho, idcs, n)
+    bot = idcs[:n]
+    top = idcs[-n:]
+    top_bot_idcs = np.concatenate([bot, top])
+    top_bot = rho[top_bot_idcs]
+    #top_bot, top_bot_idcs = data.get_top_bot_snps(rho, idcs, n)
     labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, labtype)
     top_img = image.bar(top_bot, labs)
     return jsonify({'rho': rho_img, 'top': top_img})
+
+''' Correlate demographic features with decomposition weights '''
+@app.route('/analysis/corr/decomp', methods=(['GET']))
+def corr_decomp():
+    args = request.args
+    # Optional: category
+    # category is for categorical phenotypes
+    args_err = validate_args(
+        ['cohort', 'query', 'field', 'name', 'n'], 
+        args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    query = args['query']
+    field = args['field']
+    name = args['name']
+    n = int(args['n'])
+    cat = args['cat'] if 'cat' in args else None
+    # Load demographics
+    demo = data.get_demo('anton', coh)
+    df = data.demo2df(demo)
+    # Load group
+    group = df.index if query == 'All' else df.query(query).index
+    # Get decomposition weights for subjects and pheno
+    ws = []
+    pheno = []
+    for sub in group:
+        if data.has_decomp_weights('anton', coh, sub, name):
+            p = df.loc[sub][field]
+            if cat is not None:
+                p = p == cat
+            pheno.append(p)
+            w = data.get_decomp_weights('anton', coh, sub, name)
+            ws.append(w)
+    # Find correlation
+    rho = correlation.corr_decomp_pheno(ws, pheno, n)
+    # Plot correlation over components
+    img = image.plot(rho)
+    return jsonify({'data': img})
+
+''' Correlate SNPs with decomposition weights '''
+@app.route('/analysis/corr/decomp-snps', methods=(['GET']))
+def corr_decomp_snps():
+    args = request.args
+    args_err = validate_args(
+        ['cohort', 'query', 'name', 'n', 'set', 'hap', 'ntop', 'labtype'], 
+        args, request.url) 
+    if args_err:
+        return args_err
+    # Params
+    coh = args['cohort']
+    query = args['query']
+    name = args['name']
+    n = int(args['n'])
+    subset = args['set']
+    hap = int(args['hap'])
+    ntop = int(args['ntop'])
+    labtype = args['labtype']
+    # Load demographics
+    demo = data.get_demo('anton', coh)
+    df = data.demo2df(demo)
+    # Load group
+    group = df.index if query == 'All' else df.query(query).index
+    # Get decomposition weights and snps for subjects
+    ws = []
+    snps = []
+    for sub in group:
+        if (data.has_decomp_weights('anton', coh, sub, name) and
+            data.has_snps('anton', coh, sub, subset)):
+            w = data.get_decomp_weights('anton', coh, sub, name)
+            ws.append(w)
+            snp = data.get_snps('anton', coh, sub, subset)
+            snp = snp == hap
+            snps.append(snp)
+    # Find correlation
+    rho_mat = correlation.corr_decomp_snps(ws, snps, n)
+    a,b = rho_mat.shape
+    rho = rho_mat.reshape(-1)
+    # Get top correlations
+    idcs = np.argsort(rho)
+    bot_idcs = idcs[:ntop]
+    top_idcs = idcs[-ntop:]
+    best_idcs = np.concatenate([bot_idcs, top_idcs])
+    widcs = np.floor(best_idcs/b).astype('int')
+    sidcs = best_idcs-widcs*b
+    # Label
+    snps_labs = data.relabel_snps('anton', coh, sidcs, subset, labtype)
+    labs = [f'{i}-{snp}' for i,snp in zip(widcs, snps_labs)]
+    # Return image
+    dist_img = image.plot(rho[idcs])
+    img = image.bar(rho[best_idcs], labs)
+    return jsonify({'data': img, 'dist': dist_img})
 
 '''Perform image math'''
 @app.route('/math/image', methods=(['GET']))
@@ -537,4 +637,4 @@ def decomp_varexp():
     return jsonify({'data': img})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run(host='0.0.0.0', port=8008, debug=True)

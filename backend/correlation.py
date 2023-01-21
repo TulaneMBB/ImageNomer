@@ -44,3 +44,41 @@ def corr_feat(feats, var, cat=None, typ='Pearson', bonf=True):
 
 def corr_var(var1, var2):
     return np.corrcoef(var1, var2)[0,1]
+
+def corr_decomp_pheno(ws, pheno, n):
+    ws = np.stack(ws)
+    ws = ws[:,:n]
+    mu_ws = np.mean(ws, axis=0, keepdims=True)
+    ws = ws - mu_ws
+    pheno = np.array(pheno)
+    mu_pheno = np.mean(pheno) 
+    pheno = pheno - mu_pheno
+    xx = np.einsum('ab,ab->b', ws, ws)
+    xy = np.einsum('ab,a->b', ws, pheno)
+    yy = np.einsum('a,a->', pheno, pheno)
+    rho = xy / (xx*yy)**0.5
+    return rho
+
+def corr_decomp_snps(ws, snps, n):
+    ws = np.stack(ws)
+    ws = ws[:,:n]
+    mu_ws = np.mean(ws, axis=0, keepdims=True)
+    ws = ws - mu_ws
+    snps = np.stack(snps)
+    mu_snps = np.mean(snps, axis=0, keepdims=True)
+    snsp = snps - mu_snps
+    #rho = []
+    #for i in range(n):
+    #    xx = np.einsum('a,a->', ws[:,i], ws[:,i])
+    #    xy = np.einsum('a,ab->b', ws[:,i], snps)
+    #    yy = np.einsum('ab,ab->b', snps, snsp)
+    #    rho.append(xy / (xx*yy)**0.5)
+    #rho = np.stack(rho)
+    xx = np.einsum('ab,ab->b', ws, ws)
+    xy = np.einsum('ab,ac->bc', ws, snps)
+    yy = np.einsum('ac,ac->c', snps, snsp)
+    denom = np.einsum('b,c->bc', xx, yy)
+    rho = xy / denom**0.5
+    # Sometimes happens with SNPs
+    rho[np.isnan(rho)] = 0
+    return rho

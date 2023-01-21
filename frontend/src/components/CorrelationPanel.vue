@@ -33,6 +33,15 @@
                 label='Demographic Feature' 
                 hide-details dense class='pa-0 ma-0 ml-4'>
             </v-select>
+           <v-select 
+                v-if='featIsCat'
+                v-model='cat'
+                :items='catItems' 
+                label='Category' 
+                hide-details 
+                class='ml-4'
+                dense>
+            </v-select>
             <v-select 
                 v-model='respVar'
                 :items="Object.keys(store.demo).concat(
@@ -80,6 +89,23 @@ import { enc } from './../functions.js';
 
 export default {
     name: "CorrelationPanel",
+    computed: {
+        catItems() {
+            const cats = new Set();
+            const pheno = this.store.demo[this.feat];
+            for (let key in pheno) {
+                cats.add(pheno[key]);
+            }
+            return [...cats];
+        },
+        featIsCat() {
+            const pheno = this.store.demo[this.feat];
+            for (let key in pheno) {
+                return isNaN(pheno[key]);
+            }
+            return false;
+        },
+    },
     data() {
         return {
             imageData: null,
@@ -96,6 +122,7 @@ export default {
             set: null,
             hap: "0:Minor",
             labtype: "index",
+            cat: null,
         };
     },
     setup() {
@@ -110,11 +137,12 @@ export default {
                 this.getCorrSNPs();
                 return;
             }
+            const cat = this.featIsCat ? `&cat=${enc(this.cat)}` : '';
             const taskPart = (this.task == "All")
                 ? ""
                 : `&task=${enc(this.task)}`;
             this.url = (this.respVar == "fc" || this.respVar == 'partial')
-                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap`
+                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap${enc(cat)}`
                 : `/analysis/corr/demo?cohort=test&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}`;
             fetch(this.url)
             .then(resp => resp.json())

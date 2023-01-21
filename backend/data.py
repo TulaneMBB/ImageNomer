@@ -45,6 +45,16 @@ def has_snps(user, cohort, sub, subset):
     fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
     return Path(fname).exists
 
+def has_decomp_weights(user, cohort, sub, name):
+    return Path(get_decomp_weights_name(user, cohort, sub, name)).exists
+   
+def get_decomp_weights_name(user, cohort, sub, name): 
+    fname = f'data/{user}/cohorts/{cohort}/decomp/{name}-weights/{sub}_comp-{name}_weights.npy'
+    return fname
+
+def get_decomp_weights(user, cohort, sub, name):
+    return np.load(get_decomp_weights_name(user, cohort, sub, name))
+
 def get_snps(user, cohort, sub, subset):
     fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
     return np.load(fname)
