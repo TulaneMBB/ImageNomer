@@ -142,8 +142,8 @@ export default {
                 ? ""
                 : `&task=${enc(this.task)}`;
             this.url = (this.respVar == "fc" || this.respVar == 'partial')
-                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap${enc(cat)}`
-                : `/analysis/corr/demo?cohort=test&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}`;
+                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap${cat}`
+                : `/analysis/corr/demo?cohort=test&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}${cat}`;
             fetch(this.url)
             .then(resp => resp.json())
             .then(json => {

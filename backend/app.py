@@ -124,7 +124,7 @@ def spns():
 @app.route('/analysis/corr/demo', methods=(['GET']))
 def corr_demo():
     args = request.args
-    # Optional: task, session
+    # Optional: task, session, cat
     args_err = validate_args(['cohort', 'query', 'field1', 'field2'], args, request.url)
     if args_err:
         return args_err
@@ -133,16 +133,23 @@ def corr_demo():
     query = args['query']
     field1 = args['field1']
     field2 = args['field2']
+    cat = args['cat'] if 'cat' in args else None
     # Load demographics 
     demo = data.get_demo('anton', cohort)
     df = data.demo2df(demo)
     # Load group
     subset = df.query(query) if query != 'All' else df
+    '''
     if field1 == 'sex' or field2 == 'sex':
         field = field2 if field1 == 'sex' else field1
-        m = subset.query('sex == "M"')[field]
-        f = subset.query('sex == "F"')[field]
-        img = image.violin([m,f], ['Male', 'Female'], field)
+        m = subset.query('sex == "M"')[field1]
+        f = subset.query('sex == "F"')[field1]
+        img = image.violin([m,f], ['Male', 'Female'], field1)
+    '''
+    if cat is not None:
+        a = subset.query(f'{field1} == "{cat}"')[field2]
+        b = subset.query(f'{field1} != "{cat}"')[field2]
+        img = image.violin([a,b], [cat, 'Other'], field2)
     else:
         img = image.scatter(subset[field1], subset[field2], field1, field2)
     return jsonify({'data': img})
