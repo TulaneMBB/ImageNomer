@@ -214,11 +214,11 @@ export default {
             const avg = this.avg ? "&average" : "";
             const limiqr = this.limiqr ? "&limiqr" : "";
             if (this.wtype == 'fc') {
-                url = `/data/weights/fc?cohort=test&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap${avg}`;
+                url = `/data/weights/fc?cohort=${enc(this.store.cohort)}&fname=${enc(fname)}&task=${enc(this.task)}&mult=${enc(this.mult)}&query=${enc(this.query)}&remap${avg}`;
             } else {
                 if (!this.set) return;
                 const hap = this.hap[0];
-                url = `/data/weights/snps?cohort=test&fname=${enc(fname)}&n=${enc(this.ntop)}&set=${enc(this.set)}&hap=${enc(hap)}&labtype=${enc(this.labtype)}${avg}${limiqr}`;
+                url = `/data/weights/snps?cohort=${enc(this.store.cohort)}&fname=${enc(fname)}&n=${enc(this.ntop)}&set=${enc(this.set)}&hap=${enc(hap)}&labtype=${enc(this.labtype)}${avg}${limiqr}`;
             }
             fetch(url)
             .then(resp => resp.json())

@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import os
 import json
 import numpy as np
+from math import isnan
 
 # Our modules
 import power
@@ -31,7 +32,7 @@ def index():
     return render_template('index.html')
 
 '''List cohorts'''
-@app.route('/data/list', methods=(['GET']))
+@app.route('/data/cohorts', methods=(['GET']))
 def ls():
     args = request.args
     task = args['task'] if 'task' in args else None
@@ -190,6 +191,10 @@ def corr_fc():
                 p = df.loc[sub][field]
                 if cat is not None:
                     p = p == cat
+                # pandas will fill in data fields that don't exist for an FC with nan?
+                # This is easiest way to solve
+                elif isnan(p):
+                    continue
                 pheno.append(p)
                 fc = data.get_fc('anton', coh, sub, task, ses, typ=typ)
                 fcs.append(fc)

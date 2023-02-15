@@ -38,21 +38,21 @@
             <FC
                 v-for='snps in displayedFC'
                 :key="snps.id" :type='snps.type'
-                cohort='test' :sub='snps.sub' :set='set' remap>
+                :sub='snps.sub' :set='set' remap>
             </FC>
         </div>
         <div v-else-if='store.display == "partial"'>
             <FC 
                 v-for="fc in displayedFC"
                 :key="fc.id" :type='fc.type'
-                cohort='test' :sub='fc.sub' :task='fc.task' remap>
+                :sub='fc.sub' :task='fc.task' remap>
             </FC>
         </div>
         <div v-else-if='store.display == "fc"'>
             <FC 
                 v-for="fc in displayedFC"
                 :key="fc.id" :type='fc.type'
-                cohort='test' :sub='fc.sub' :task='fc.task' remap>
+                :sub='fc.sub' :task='fc.task' remap>
             </FC>
         </div>
         <div class='text-body-2 ml-4'>
@@ -130,7 +130,7 @@ export default {
             const fnames = this.filteredFC.map(fc => fc.fname);
             const formData = new FormData();
             formData.append('type', type)
-            formData.append('cohort', 'test');
+            formData.append('cohort', this.store.cohort);
             formData.append('fnames', JSON.stringify(fnames));
             formData.append('remap', true);
             fetch(`/analysis/stats`, {

@@ -1,6 +1,6 @@
 <template>
     <div id='side'>
-        <CohortInfo cohort='test'/>
+        <CohortInfo/>
     </div>
 </template>
 

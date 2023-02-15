@@ -60,7 +60,7 @@ export default {
         fetchFcImage() {
             const remap = this.remap ? '&remap' : '';
             const colorbar = this.colorbar ? '&colorbar' : '';
-            fetch(`/data/fc?cohort=${enc(this.cohort)}&sub=${enc(this.sub)}&task=${enc(this.task)}&type=${enc(this.type)}${remap}${colorbar}`)
+            fetch(`/data/fc?cohort=${enc(this.store.cohort)}&sub=${enc(this.sub)}&task=${enc(this.task)}&type=${enc(this.type)}${remap}${colorbar}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -73,7 +73,7 @@ export default {
             .catch(err => this.error = err);
         },
         fetchSNPsImage() {
-            fetch(`/data/snps?cohort=${enc(this.cohort)}&sub=${enc(this.sub)}&set=${enc(this.set)}`)
+            fetch(`/data/snps?cohort=${enc(this.store.cohort)}&sub=${enc(this.sub)}&set=${enc(this.set)}`)
             .then(resp => resp.json())
             .then(json => {
                 this.loading = false;
@@ -87,7 +87,6 @@ export default {
         }
     },
     props: {
-        cohort: String,
         sub: String,
         type: String,
         task: {

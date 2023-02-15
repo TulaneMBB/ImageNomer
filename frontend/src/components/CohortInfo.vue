@@ -1,6 +1,5 @@
 <template>
-    <div v-if="loading">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
+    <div v-if="cohort == null">Loading...</div>
     <div v-else>
         <v-card title='Subjects' class='mb-2'>
             <v-card-subtitle>
@@ -76,6 +75,7 @@
 </template>
 
 <script>
+import { mapState } from 'pinia';
 import { useCohortStore } from "@/stores/CohortStore";
 import { enc } from './../functions.js';
 
@@ -92,10 +92,10 @@ export default {
         }
     },
     created() {
-        this.fetchCohort(this.cohort);
-        this.loading = false;
+        this.store.getCohorts();
     },
     computed: {
+        ...mapState(useCohortStore, ['cohort']),
         displayed() {
             const subs = this.filtered;
             return subs.slice((this.page-1)*this.NUM_PAGE, 
@@ -108,9 +108,6 @@ export default {
         }
     },
     methods: {
-        fetchCohort() {
-            this.store.fetchCohort(this.cohort);
-        },
         makeGroup() {
             fetch(`/data/group?cohort=${enc(this.cohort)}&query=${enc(this.query)}`)
             .then(resp => resp.json())
@@ -127,15 +124,17 @@ export default {
             this.page = 1;
         },
     },
-    props: {
-        cohort: String
-    },
     setup() {
         const store = useCohortStore();
         return {
             store
         }
     },
+    watch: {
+        cohort() {
+            this.store.fetchCohort(this.cohort);
+        }
+    }
 }
 </script>
 

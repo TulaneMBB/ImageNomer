@@ -63,7 +63,6 @@ export default {
         };
     },
     props: {
-        cohort: String,
     },
     setup() {
         const store = useCohortStore();
@@ -79,7 +78,7 @@ export default {
                 groupsObj[g.query] = g.subs;
             });
             const formData = new FormData();
-            formData.append('cohort', this.cohort);
+            formData.append('cohort', this.store.cohort);
             formData.append('groups', JSON.stringify(groupsObj));
             formData.append('field', this.field);
             fetch(`/data/demo/hist`, {

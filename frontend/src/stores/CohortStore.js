@@ -4,6 +4,8 @@ import { enc, getFnameField } from './../functions.js';
 export const useCohortStore = defineStore("CohortStore", {
     state: () => {
         return {
+            cohort: null,
+            cohorts: [],
             fctype: 'fc',
             snps: {},
             fc: [], 
@@ -131,15 +133,29 @@ export const useCohortStore = defineStore("CohortStore", {
                     console.log(json.err);
                     return;
                 }
-                this.fc = this.parseFC(json.fc);
-                this.partial = this.parseFC(json.partial);
-                this.snps = this.parseSNPs(json.snps);
+                this.fc = json.fc ? this.parseFC(json.fc) : [];
+                this.partial = json.partial ? this.parseFC(json.partial) : [];
+                this.snps = json.snps ? this.parseSNPs(json.snps) : {};
                 this.demo = json.demo;
                 this.subs = this.getSubs(json.demo);
                 this.weights = json.weights;
                 this.groups = [{query: 'All', 
                     subs: this.subs.map(sub => sub.id)}];
                 this.decomp = json.decomp;
+            })
+            .catch(err => console.log(err));
+        },
+        getCohorts() {
+            fetch(`/data/cohorts`)
+            .then(resp => resp.json())
+            .then(json => {
+                if (json.err) {
+                    console.log(json.err);
+                    return;
+                }
+                this.cohorts = json.cohorts;
+                this.cohort = this.cohorts[0];
+                this.fetchCohort(this.cohort);
             })
             .catch(err => console.log(err));
         },

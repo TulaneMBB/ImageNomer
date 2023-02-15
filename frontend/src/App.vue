@@ -1,7 +1,7 @@
 <template>
 <v-app>
     <v-main>
-        <TopPanel cohort='test'/>
+        <TopPanel/>
         <v-row dense>
             <v-col cols='auto'>
                 <SidePanel/>

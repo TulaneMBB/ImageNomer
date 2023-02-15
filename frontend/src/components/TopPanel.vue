@@ -1,41 +1,40 @@
 <template>
-<div id='imagenomer-h'>
-    <div class='text-h4'>ImageNomer</div>
-    <div class='text-body-2'>
-        <span>
-            {{ cohort }} cohort
-        </span>
-        <span style='margin-left: 10px;'>
-            <a href='#'>Upload Data</a>
-            <a href='#'>All Cohorts</a>
-        </span>
-        <div style='float: right'>
-            <a href='#'>GitHub</a>
-            <a href='#'>Bugs</a>
-            <a href='#'>Settings</a>
-            <span style='margin-left: 10px;'>
-                Logged in: <a href='#'>Anton</a>
-                <a href='#'>Sign out</a>
-            </span>
-        </div>
-    </div>
-</div>
+<v-sheet class='ma-1 pa-1'>
+    <v-sheet class='text-h4 mb-2'>ImageNomer</v-sheet>
+    <v-sheet class='d-inline-flex'>
+        <v-select 
+            label='Cohort'
+            :items='store.cohorts'
+            v-model='cohort'
+            class='d-inline-flex mr-n6'
+        ></v-select>
+        <v-btn class='d-inline-flex ma-1 mt-2'>New Cohort</v-btn>
+        <v-btn class='d-inline-flex ma-1 mt-2'>Upload Data</v-btn>
+    </v-sheet>
+</v-sheet>
 </template>
 
 <script>
+import { mapWritableState } from 'pinia';
 import { useCohortStore } from "@/stores/CohortStore";
 
 export default {
-    name: 'CohortInfo',
-    props: {
-        cohort: String,
+    name: 'TopPanel',
+    computed: {
+        ...mapWritableState(useCohortStore, ['cohort'])
     },
     setup() {
         const store = useCohortStore();
         return {
             store
         }
-    }
+    },
+    watch: {
+        cohort() {
+            console.log('got here');
+            this.store.fetchCohort(this.store.cohort);
+        }
+    },
 }
 </script>
 
@@ -49,7 +48,7 @@ export default {
     margin-bottom: 10px;
     border-radius: 3px;
 }
-#imagenomer-h a {
+/*#imagenomer-h a {
     margin-left: 5px;
-}
+}*/
 </style>

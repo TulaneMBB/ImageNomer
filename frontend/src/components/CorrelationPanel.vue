@@ -142,8 +142,8 @@ export default {
                 ? ""
                 : `&task=${enc(this.task)}`;
             this.url = (this.respVar == "fc" || this.respVar == 'partial')
-                ? `/analysis/corr/fc?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap${cat}`
-                : `/analysis/corr/demo?cohort=test&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}${cat}`;
+                ? `/analysis/corr/fc?cohort=${enc(this.store.cohort)}&query=${enc(this.group)}&field=${enc(this.feat)}${taskPart}&fctype=${enc(this.respVar)}&remap${cat}`
+                : `/analysis/corr/demo?cohort=${enc(this.store.cohort)}&query=${enc(this.group)}&field1=${enc(this.feat)}&field2=${enc(this.respVar)}${cat}`;
             fetch(this.url)
             .then(resp => resp.json())
             .then(json => {
@@ -183,7 +183,7 @@ export default {
         },
         getCorrSNPs() {
             const hap = this.hap[0];
-            this.url = `/analysis/corr/snps?cohort=test&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10&hap=${enc(hap)}&labtype=${enc(this.labtype)}`;
+            this.url = `/analysis/corr/snps?cohort=${this.store.cohort}&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10&hap=${enc(hap)}&labtype=${enc(this.labtype)}`;
             fetch(this.url)
             .then(resp => resp.json())
             .then(json => {

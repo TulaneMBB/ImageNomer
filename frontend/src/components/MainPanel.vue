@@ -12,7 +12,7 @@
         </v-btn-toggle>
     </div>
     <div v-if='store.display == "pheno"'>
-        <PhenoPanel cohort='test'></PhenoPanel>
+        <PhenoPanel></PhenoPanel>
     </div>
     <div v-else-if='["fc", "partial", "snps"].includes(store.display)'>
         <FCPanel></FCPanel>

@@ -205,7 +205,7 @@ export default {
     methods: {
         corrPheno() {
             const cat = this.phenoIsCat ? `&cat=${enc(this.cat)}` : '';
-            const url = `/analysis/corr/decomp?cohort=test&name=${enc(this.name)}&n=${this.m}&query=All&field=${enc(this.pheno)}${cat}`;
+            const url = `/analysis/corr/decomp?cohort=${enc(this.store.cohort)}&name=${enc(this.name)}&n=${this.m}&query=All&field=${enc(this.pheno)}${cat}`;
             fetch(url)
             .then(resp => resp.json())
             .then(json => {
@@ -219,7 +219,7 @@ export default {
         },
         corrSNPs() {
             const hap = parseInt(this.hap);
-            const url = `/analysis/corr/decomp-snps?cohort=test&name=${enc(this.name)}&n=${this.m}&query=All&set=${enc(this.set)}&hap=${hap}&labtype=${enc(this.labtype)}&ntop=${this.ntop}`;
+            const url = `/analysis/corr/decomp-snps?cohort=${enc(this.store.cohort)}&name=${enc(this.name)}&n=${this.m}&query=All&set=${enc(this.set)}&hap=${hap}&labtype=${enc(this.labtype)}&ntop=${this.ntop}`;
             fetch(url)
             .then(resp => resp.json())
             .then(json => {
@@ -236,7 +236,7 @@ export default {
             if (!this.name || this.n === null) {
                 return;
             }
-            const url = `/data/component?cohort=test&name=${enc(this.name)}&n=${enc(this.n)}&remap`;
+            const url = `/data/component?cohort=${enc(this.store.cohort)}&name=${enc(this.name)}&n=${enc(this.n)}&remap`;
             fetch(url)
             .then(resp => resp.json())
             .then(json => {
@@ -249,7 +249,7 @@ export default {
             .catch(err => console.log(err));
         },
         getVarExplained() {
-            fetch(`/data/decomp/varexp?cohort=test&name=${enc(this.name)}`)
+            fetch(`/data/decomp/varexp?cohort=${enc(this.store.cohort)}&name=${enc(this.name)}`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.err) {
