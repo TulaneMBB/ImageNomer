@@ -200,8 +200,8 @@ def corr_fc():
                 fcs.append(fc)
     fcs = np.stack(fcs)
     # Get correlation and p-value
-    cat = 'M' if field == 'sex' else None
-    rho, p = correlation.corr_feat(fcs, pheno, cat=cat)
+    #cat = 'M' if field == 'sex' else None
+    rho, p = correlation.corr_feat(fcs, pheno, cat=None)
     rho = data.vec2mat(rho, fillones=False)
     p = data.vec2mat(p, fillones=False)
     # Apply threshold

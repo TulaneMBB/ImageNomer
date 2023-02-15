@@ -36,6 +36,7 @@ def corr_feat(feats, var, cat=None, typ='Pearson', bonf=True):
     t[t < 0] = -t[t < 0]
     # Convert to 2-sided p value
     p = (1-stats.t.cdf(t, df))*2
+    # Bonferroni correction
     if bonf:
         p *= m
     p[p > 1] = 1
