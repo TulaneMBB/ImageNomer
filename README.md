@@ -15,21 +15,21 @@ fMRI and omics viewer for machine learning
 
 ## Capabilities
 
-FC View
+FC View. You have the ability to create summary images.
 
-<img width='800' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureFCPanel.png'>
+<img width='600' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureFCPanel.png'>
 
-Phenotype Groups
+Phenotype Groups. We identify bias in general intelligence surrogate, even when certain confounders are regressed out.
 
-<img width='800' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureBias2.png'>
+<img width='600' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureBias2.png'>
 
-Identify Significant Effects
+Identify Significant Effects. A simple comparison reveals unexpected information hidden in functional connectivity.
 
-<img width='800' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureNullCorrelation2.png'>
+<img width='600' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureNullCorrelation2.png'>
 
-Model Weights
+Model Weights. We find that only a few SNPs are consistently chosen by bootstrapped LASSO mdoels.
 
-<img width='800' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureWeights.png'>
+<img width='600' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureWeights.png'>
 
 ## Publications
 
@@ -39,6 +39,6 @@ Presented at SPIE: Medical Imaging 2023.
 
 ## Contact
 
-<a href='https://aorliche.github.io'>Website</a>
-<a href='mailto:aorlichenko@tulane.edu'>Anton Orlichenko</a>
+<a href='https://aorliche.github.io'>My personal website</a><br>
+<a href='mailto:aorlichenko@tulane.edu'>mailto:aorlichenko@tulane.edu</a>
 
