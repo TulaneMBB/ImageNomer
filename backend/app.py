@@ -3,6 +3,7 @@ import os
 import json
 import numpy as np
 from math import isnan
+from natsort import natsorted
 
 # Our modules
 import power
@@ -147,9 +148,27 @@ def corr_demo():
         f = subset.query('sex == "F"')[field1]
         img = image.violin([m,f], ['Male', 'Female'], field1)
     '''
-    if cat is not None:
+    # Both categorical
+    a = subset[field1].tolist()
+    b = subset[field2].tolist()
+    if isinstance(a[0], str) and isinstance(b[0], str):
+        aset = natsorted(list(set(a)))
+        bset = natsorted(list(set(b)))
+        dd = {aa: {bb: 0 for bb in bset} for aa in aset}
+        for aa,bb in zip(a,b):
+            dd[aa][bb] += 1
+        mat = np.zeros((len(aset),len(bset)))
+        for i in range(len(aset)):
+            for j in range(len(bset)):
+                mat[i,j] = dd[aset[i]][bset[j]]
+        img = image.matshow(aset, bset, mat)
+    elif cat is not None:
         a = subset.query(f'{field1} == "{cat}"')[field2]
         b = subset.query(f'{field1} != "{cat}"')[field2]
+        a = a.to_numpy()
+        a = a[np.invert(np.isnan(a))] 
+        b = b.to_numpy()
+        b = b[np.invert(np.isnan(b))] 
         img = image.violin([a,b], [cat, 'Other'], field2)
     else:
         img = image.scatter(subset[field1], subset[field2], field1, field2)

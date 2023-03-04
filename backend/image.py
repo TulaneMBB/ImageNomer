@@ -70,7 +70,11 @@ def groups_hist_private(df, groups, field):
     ylabels = []
     for group in groups.keys():
         ylabels.append(group)
-        ys.append(df.loc[groups[group], field])
+        lst = list(df.loc[groups[group], field])
+        # Remove NaNs
+        if isinstance(lst[0], str) or isinstance(lst[1], str):
+            lst = [a for a in lst if not isinstance(a, float)]
+        ys.append(lst)
     return histogram(ys, ylabels)
 
 def scatter_private(var1, var2, name1, name2):
@@ -151,6 +155,13 @@ def fill_between_private(bot, top):
     ax.fill_between(np.arange(bot.shape[0]), bot, y2=top, alpha=1)
     return tobase64(fig)
 
+def matshow_private(aset, bset, mat):
+    fig, ax = plt.subplots()
+    ax.matshow(mat)
+    for (i, j), z in np.ndenumerate(mat):
+        ax.text(j, i, '{:0.1f}'.format(z), ha='center', va='center')
+    return tobase64(fig)
+
 # Weird stuff with matplotlib and multithreading? crashes the process
 # Can fix with mutliprocessing
 def imshow(fc, colorbar=True, reverse_cmap=False):
@@ -185,3 +196,6 @@ def fill_between(bot, top):
 
 def boxplot(data, labels):
     return mp_wrap(boxplot_private, data, labels)
+
+def matshow(aset, bset, mat):
+    return mp_wrap(matshow_private, aset, bset, mat)
