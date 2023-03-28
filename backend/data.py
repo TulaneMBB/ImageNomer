@@ -36,7 +36,8 @@ def get_fc_fname(user, cohort, sub, task=None, ses=None, typ='fc'):
     return fname
 
 def has_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
-    return Path(get_fc_fname(user, cohort, sub, task, ses, typ)).exists
+    p = Path(get_fc_fname(user, cohort, sub, task, ses, typ))
+    return p.exists()
 
 def get_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
     return np.load(get_fc_fname(user, cohort, sub, task, ses, typ))

@@ -79,14 +79,14 @@ export const useCohortStore = defineStore("CohortStore", {
                     const mean = (vals.reduce((prev, cur) => prev+cur, 0)
                         /vals.length).toFixed(1);
                     return `min: ${min} mean: ${mean} max: ${max} (n=${vals.length})`;
-                } else if (vals[0] == 'M' || vals[0] == 'F') {
+                /*} else if (vals[0] == 'M' || vals[0] == 'F') {
                     let m = 0;
                     let f = 0;
                     vals.forEach(val => {
                         if (val == 'M') m++;
                         else if (val == 'F') f++;
                     });
-                    return `male: ${m} female: ${f} (n=${vals.length})`
+                    return `male: ${m} female: ${f} (n=${vals.length})`*/
                 } else {
                     // Should contain the above as a special case
                     // Count number of distinct values
