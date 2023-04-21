@@ -132,9 +132,9 @@ import { enc } from './../functions.js';
 
 export default {
     name: 'WeightsPanel',
-    created() {
+    /*created() {
         this.store.fetchCohort('test');
-    },
+    },*/
     computed: {
         dirFnames() {
             const curDir = this.getCurDirContents();
