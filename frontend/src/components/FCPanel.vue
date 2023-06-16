@@ -122,7 +122,7 @@ export default {
             task: 'All',
             loading: true,
             error: null,
-            set: '',
+            set: null,
         }
     },
     methods: {

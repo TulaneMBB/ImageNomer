@@ -4,7 +4,7 @@
             <v-btn key='pheno' value='pheno'>Phenotypes</v-btn>
             <v-btn key='fc' value='fc'>FC</v-btn>
             <v-btn key='partial' value='partial'>PC</v-btn>
-            <v-btn key='snps' value='snps'>SNPs</v-btn>
+            <v-btn key='snps' :disabled='store.snpsSets.length == 0' value='snps'>SNPs</v-btn>
             <v-btn key='comp' value='comp'>Decomposition</v-btn>
             <v-btn key='corr' value='corr'>Correlation</v-btn>
             <v-btn key='weights' value='weights'>Weights</v-btn>

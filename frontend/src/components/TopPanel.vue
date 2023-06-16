@@ -8,8 +8,8 @@
             v-model='cohort'
             class='d-inline-flex mr-n6'
         ></v-select>
-        <v-btn class='d-inline-flex ma-1 mt-2'>New Cohort</v-btn>
-        <v-btn class='d-inline-flex ma-1 mt-2'>Upload Data</v-btn>
+        <v-btn class='d-inline-flex ma-1 mt-2'>View Documentation</v-btn>
+        <v-btn class='d-inline-flex ma-1 mt-2'>Visit GitHub</v-btn>
     </v-sheet>
 </v-sheet>
 </template>
@@ -31,8 +31,8 @@ export default {
     },
     watch: {
         cohort() {
-            console.log('got here');
             this.store.fetchCohort(this.store.cohort);
+            console.log('got here');
         }
     },
 }

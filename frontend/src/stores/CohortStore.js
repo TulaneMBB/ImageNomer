@@ -28,9 +28,14 @@ export const useCohortStore = defineStore("CohortStore", {
         // NOTE: maybe required to say state['groups'] not state.groups
         groupSelected: (state) => {
             return (type, task) => {
-                const fcArr = type == 'snps' 
-                    ? state[type][task]
-                    : state[type];
+                let fcArr = [];
+                try {
+                    fcArr = type == 'snps' 
+                        ? state[type][task]
+                        : state[type];
+                } catch(e) {
+                    console.log(e);
+                }
                 return fcArr.filter(item => {
                     const groups = state['groups'];
                     for (let i=0; i<groups.length; i++) {
@@ -56,8 +61,13 @@ export const useCohortStore = defineStore("CohortStore", {
                     return subs;
                 }
                 if (type == 'snps') {
-                    return state[type][task]
-                    .filter(elt => subs.indexOf(elt.sub) != -1);
+                    try {
+                        return state[type][task]
+                        .filter(elt => subs.indexOf(elt.sub) != -1);
+                    } catch(e) {
+                        console.log(e);
+                        return [];
+                    }
                 }
                 return state[type]
                     .filter(elt => {
@@ -68,6 +78,7 @@ export const useCohortStore = defineStore("CohortStore", {
             };
         },
         snpsSets: (state) => {
+            if (!state['snps']) return [];
             return Object.keys(state['snps']);
         },
         summary: (state) => {
@@ -136,12 +147,12 @@ export const useCohortStore = defineStore("CohortStore", {
                 this.fc = json.fc ? this.parseFC(json.fc) : [];
                 this.partial = json.partial ? this.parseFC(json.partial) : [];
                 this.snps = json.snps ? this.parseSNPs(json.snps) : {};
-                this.demo = json.demo;
+                this.demo = json.demo ?? {};
                 this.subs = this.getSubs(json.demo);
-                this.weights = json.weights;
+                this.weights = json.weights ?? {};
                 this.groups = [{query: 'All', 
                     subs: this.subs.map(sub => sub.id)}];
-                this.decomp = json.decomp;
+                this.decomp = json.decomp ?? {};
             })
             .catch(err => console.log(err));
         },
