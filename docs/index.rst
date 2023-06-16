@@ -17,14 +17,12 @@ Download the docker image
 -------------------------
 
 .. code-block:: bash
-
 docker pull ghcr.io/image-nomer/image-nomer:latest
 
 Run the image
 -------------
 
 .. code-block:: bash
-    
 docker run -p 8008:8008 --it ghcr.io/image-nomer/image-nomer:latest
 
 We expose port 8008 of the container to be accessible from your web browser.
