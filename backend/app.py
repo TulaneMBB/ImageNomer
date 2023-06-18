@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 import os
 import json
 import numpy as np
@@ -32,6 +32,12 @@ def validate_args(keywords, args, url):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+'''Icon'''
+@app.route('/favicon.png', methods=(['GET']))
+def favicon():
+    print('got here')
+    return send_file('../dist/favicon.png')
 
 '''List cohorts'''
 @app.route('/data/cohorts', methods=(['GET']))
