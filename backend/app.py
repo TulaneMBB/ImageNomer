@@ -4,6 +4,7 @@ import json
 import numpy as np
 from math import isnan
 from natsort import natsorted
+#from pprint import pprint
 
 # Our modules
 import power
@@ -60,7 +61,7 @@ def group():
     query = args['query']
     demo = data.get_demo('anton', cohort)
     df = data.demo2df(demo)
-    group = list(df.query(query).index)
+    group = [str(i) for i in list(df.query(query).index)]
     return jsonify(group)
 
 '''Get demographics graph'''
@@ -141,13 +142,6 @@ def corr_demo():
     df = data.demo2df(demo)
     # Load group
     subset = df.query(query) if query != 'All' else df
-    '''
-    if field1 == 'sex' or field2 == 'sex':
-        field = field2 if field1 == 'sex' else field1
-        m = subset.query('sex == "M"')[field1]
-        f = subset.query('sex == "F"')[field1]
-        img = image.violin([m,f], ['Male', 'Female'], field1)
-    '''
     # Both categorical
     a = subset[field1].tolist()
     b = subset[field2].tolist()

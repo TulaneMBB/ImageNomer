@@ -56,7 +56,7 @@ def get_decomp_weights(f, name):
             continue
         subid = wmobj.group(1)
         ws[subid] = wf.name
-    return ws;
+    return ws
 
 def get_comps(comps):
     cdct = dict()

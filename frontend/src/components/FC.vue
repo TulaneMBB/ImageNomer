@@ -4,7 +4,7 @@
         <span v-else-if='error'>{{ error }}</span>
         <div v-else>
             <p>
-                <span v-for='field in display' :key='field.num'>
+                <span class='text-body-2' v-for='field in display' :key='field.num'>
                     {{field.label}}<br>
                 </span>
             </p>
