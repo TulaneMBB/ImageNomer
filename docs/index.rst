@@ -13,24 +13,20 @@ ImageNomer Documentation
 Getting Started
 ===============
 
-Download the docker image
+Install docker
+--------------
+
+You need to install docker for this to work.
+
+Download and run the docker image
 -------------------------
 
 .. code-block:: bash
 
-    docker pull ghcr.io/image-nomer/image-nomer:latest
-
-Run the image
--------------
-
-.. code-block:: bash
-
-    docker run -p 8008:8008 --it ghcr.io/image-nomer/image-nomer:latest
+    docker pull ghcr.io/aorliche/image-nomer:latest
+    docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
 
 We expose port 8008 of the container to be accessible from your web browser.
-
-Open the app in your browser
-----------------------------
 
 In your browser, navigate to http://localhost:8008
 

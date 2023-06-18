@@ -9,6 +9,27 @@ fMRI and omics viewer for machine learning
 3. Correlation analysis
 4. Visualization of ML model weights and distribution
 
+## On-Line Demo
+
+Coming soon.
+
+## Quick Start with Docker
+
+1. Install Docker.
+2. Download and run the ImageNomer Docker image.
+3. Navigate to [http://localhost:8008/](http://localhost:8008/)
+
+We have provided a sample Fibromyalgia dataset from OpenNeuro for you to explore. Access to the PNC and BSNIP datasets requires application to relevant funding agencies (see docs link below).
+
+The docker-related commands are:
+
+```bash
+docker pull ghcr.io/aorliche/image-nomer:latest
+docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
+```
+
+Visit [https://imagenomer.readthedocs.io/en/latest/](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial (coming soon).
+
 ## Architecture
 
 <img width='600' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureArchitecture.png'>
