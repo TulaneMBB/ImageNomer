@@ -66,12 +66,10 @@ def get_demo(user, cohort, file=False):
         return pickle.load(f)
 
 '''
-Weights objects contain at least the following fields:
-w (numpy.ndarray), trsubs (list(str)), tsubs (list(str)), desc (str)
+Weights dictionaries contain at least the following keys:
+w (numpy.ndarray, flat 1D array), trsubs (list(str)), tsubs (list(str)), desc (str)
 '''
 def get_weights(user, cohort, fname):
-    # Hack for python's module structure
-    #sys.modules['__main__'].Weights = Weights
     fname = f'data/{user}/cohorts/{cohort}/weights/{fname}'
     with open(fname, 'rb') as f:
         return pickle.load(f)
