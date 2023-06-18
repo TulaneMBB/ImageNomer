@@ -30,6 +30,14 @@ docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
 
 Visit [https://imagenomer.readthedocs.io/en/latest/](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial (coming soon).
 
+## Importing Your Data
+
+ImageNomer uses a particular directory structure for storing FC, PC, SNPs, and model weights. Phenotype data is stored in a "demographics.pkl" file. Check the notebooks directory file ImageNomer26FibromyalgiaDataset.ipynb to see how that data was imported, starting from a csv file of demographics and BOLD timeseries.
+
+Currently, ImageNomer assumes you are using the 264-ROI Power atlas.
+
+More detailed tutorial coming soon.
+
 ## Architecture
 
 <img width='600' src='https://raw.githubusercontent.com/TulaneMBB/ImageNomer/main/images/FigureArchitecture.png'>
