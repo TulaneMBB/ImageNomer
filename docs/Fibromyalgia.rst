@@ -13,7 +13,7 @@ You should be able to see the following image:
    :width: 600px
 
 FC View Tool
-------------
+============
 
 Select "All" in the "Groups" area and click on the "FC" tab.
 
@@ -32,7 +32,7 @@ You should see the following:
    :width: 600px
 
 Phenotypes View Tool
---------------------
+====================
 
 Select "All" in the "Groups" area and click on the "Phenotypes" tab.
 
@@ -62,7 +62,7 @@ You should see the following:
    :width: 600px
 
 Creating Advanced Groups
-------------------------
+========================
 
 You can also create groups based on continuous variables. Try creating the groups "Hamilton_Anxiety_Score < 5" and "Hamilton_Anxiety_Score >= 5".
 
@@ -74,7 +74,7 @@ You should see the following:
    :width: 600px
 
 Creating Summary Images
------------------------
+=======================
 
 Go back to the "FC" tab, having selected the "Hamilton_Anxiety_Score < 5" and "Hamilton_Anxiety_Score >= 5" (selecting the "All" group would be equivalent).
 
@@ -100,7 +100,7 @@ You should see the following:
    :width: 600px
 
 Performing Image Math
----------------------
+=====================
 
 In the "Image Math" tab, type in "A-B", or whatever the labels are that correspond to your mean images.
 
@@ -112,7 +112,7 @@ You should see the group-wise difference between resting state and epr FC:
    :width: 600px
 
 Viewing Phenotype Correlations
-------------------------------
+==============================
 
 We can visualize correlations between phenotypes using the "Correlation" tab.
 
@@ -128,7 +128,7 @@ You should see the following:
 Note that there is a possibly statistically significant difference in BMI between the two groups. Not too large of a difference, but potentially interesting.
 
 Viewing Phenotype-FC Correlations
----------------------------------
+=================================
 
 Navigate to the "Correlation" tab. Select "All" for "Group", "Rheumatology_Score_1" for "Demographic Feature", "fc" for "Response Var", and "All" for "Task" (the dropdown should be created).
 
@@ -153,11 +153,11 @@ We can compare to the p-values from the PNC dataset:
    :width: 600px
 
 Visualizing Model Weights
--------------------------
+=========================
 
 We have performed simple machine learning on the fibromyalgia dataset and created weights files that can be visualized in ImageNomer.
 
-More details on creation of these simple files coming soon, but the basics can be found by inspection of the final two cells of `this notebook <https://github.com/TulaneMBB/ImageNomer/blob/main/notebooks/ImageNomer26FibromyalgiaDataset.ipynb`_.
+More details on creation of these simple files coming soon, but the basics can be found by inspection of the final two cells of `this notebook <https://github.com/TulaneMBB/ImageNomer/blob/main/notebooks/ImageNomer26FibromyalgiaDataset.ipynb>`_.
 
 Navigate to the "Weights" tab.
 
@@ -189,7 +189,7 @@ You should see the following:
 Note the sparsity of Lasso compared to Ridge. These model estimations were performed on 80% training, 20% test splits, so there is a lot of variability in the individual runs.
 
 Partial Correlation-Based Connectivity
---------------------------------------
+======================================
 
 All tasks are available for partial correlation under the "PC" tab. It is less interesting for this dataset.
 
@@ -201,18 +201,18 @@ You should see something like the following:
    :width: 600px
 
 Decomposition and SNPS
-----------------------
+======================
 
 Coming soon.
 
 Further Analysis
-----------------
+================
 
 Another interesting analysis can be done by taking mean FC images of the 'Fibromyalgia == "Yes"' and 'Fibromyalgia == "No"' groups, and subtracting them in the "Image Math" tab.
 
 This is left to user to try out.
 
 Report Bugs
------------
+===========
 
 Please send questions or bug reports to `my email <mailto:aorlichenko@tulane.edu>`_.
