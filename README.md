@@ -11,7 +11,9 @@ fMRI and omics viewer for machine learning
 
 ## On-Line Demo
 
-Coming soon.
+There is an live demo available at [https://aorliche.github.io/ImageNomer/live](https://aorliche.github.io/ImageNomer/live).
+
+See [https://imagenomer.readthedocs.io/en/latest/](https://imagenomer.readthedocs.io/en/latest/) for a walkthrough of how to use ImageNomer with the sample dataset.
 
 ## Quick Start with Docker
 
@@ -28,21 +30,21 @@ docker pull ghcr.io/aorliche/image-nomer:latest
 docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
 ```
 
-Visit [https://imagenomer.readthedocs.io/en/latest/](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial (coming soon).
+Visit [https://imagenomer.readthedocs.io/en/latest/](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial.
 
 ## Importing Your Data
 
 ImageNomer uses a particular directory structure for storing FC, PC, SNPs, and model weights. Phenotype data is stored in a "demographics.pkl" file. Check the notebooks directory file 
 
 ```
-ImageNomer26FibromyalgiaDataset.ipynb
+notebooks/ImageNomer26FibromyalgiaDataset.ipynb
 ```
 
 to see how that data was imported, starting from a csv file of demographics and BOLD timeseries.
 
 Currently, ImageNomer assumes you are using the 264-ROI Power atlas.
 
-More detailed tutorial coming soon.
+[ReadTheDocs](https://imagenomer.readthedocs.io/en/latest/) contains additional information.
 
 ## Architecture
 

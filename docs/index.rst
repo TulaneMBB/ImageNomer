@@ -10,8 +10,18 @@ ImageNomer Documentation
    :maxdepth: 2
    :caption: Contents:
 
-Getting Started
-===============
+
+Getting Started - Live Web Demo
+===============================
+
+There is a live web demo running at https://aorliche.github.io/ImageNomer/live
+
+This demo contains a single Fibromyalgia dataset from OpenNeuro.org, the same as contained in the Docker image.
+
+Once you have loaded ImageNomer, you can check out :ref:`Fibromyalgia-Tutorial` for detailed usage of ImageNomer functions. 
+
+Getting Started with Docker
+===========================
 
 Install docker
 --------------
@@ -19,7 +29,7 @@ Install docker
 You need to install docker for this to work.
 
 Download and run the docker image
--------------------------
+---------------------------------
 
 .. code-block:: bash
 
@@ -35,8 +45,37 @@ Explore example data
 
 We have provided an fMRI study of fibromyalgia from OpenNeuro.org for you to explore.
 
-Unfortunately, due to NIH data policy, we cannot provide access to the Philadelphia Neurodevelopmental Cohort (PNC) dataset. 
-Access may be obtained for research purposes through the database of Genotypes and Phenotypes (dbGaP).
+Unfortunately, due to NIH data policy, we cannot provide access to the Philadelphia Neurodevelopmental Cohort (PNC) dataset or to BSNIP. Access may be obtained for research purposes through the database of Genotypes and Phenotypes (dbGaP). If you do have permission, we would be happy to work with you regarding functions such as, e.g. SNPs, that are not available in the Fibromyalgia dataset.
+
+Adding Your Own Data
+====================
+
+To add your own data, you will need to clone the GitHub repository and install the required Python dependencies.
+
+.. code-block:: bash
+   git clone https://github.com/TulaneMBB/ImageNomer
+   cd ImageNomer
+   pip install -r requirements.txt
+
+The repository contains the Fibromyalgia dataset. To run ImageNomer, execute the following command:
+
+.. code-block:: bash
+   python backend/app.py
+
+Then, navigate to http://localhost:8008 
+
+Data is stored in the `ImageNomer/data/user/cohorts` directory. Currently the only user is "anton". See the `notebooks/ImageNomer26FibromyalgiaDataset.ipynb` notebook file for an example of how to import data into ImageNomer starting with a csv file and BOLD timeseries.
+
+An additional description of the dataset layout in ImageNomer is coming soon.
+
+Changing the Code
+=================
+
+.. image:: images/FigureArchitecture.png
+
+ImageNomer consists of a a Python backend and a Vue javascript frontend. All Python packages are listed in the `requirements.txt` file. Vue requirements can be installed with `npm` from the `frontend` directory.
+
+Please reach out with any questions.
 
 Indices and tables
 ==================
