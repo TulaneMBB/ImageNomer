@@ -10,7 +10,6 @@ ImageNomer Documentation
    :maxdepth: 2
    :caption: Contents:
 
-
 Getting Started - Live Web Demo
 ===============================
 
@@ -19,6 +18,10 @@ There is a live web demo running at https://aorliche.github.io/ImageNomer/live
 This demo contains a single Fibromyalgia dataset from OpenNeuro.org, the same as contained in the Docker image.
 
 Once you have loaded ImageNomer, you can check out the :ref:`Fibromyalgia-Tutorial`. 
+
+**The beta version of ImageNomer retains state for the duration of the session.** This includes generated correlation images, which may impact stability if many users access the web demo in a short amount of time.
+
+.. _Getting-Started:
 
 Getting Started with Docker
 ===========================
@@ -58,7 +61,7 @@ To add your own data, you will need to clone the GitHub repository and install t
    cd ImageNomer
    pip install -r requirements.txt
 
-The repository contains the Fibromyalgia dataset. To run ImageNomer, execute the following command:
+The repository already contains the Fibromyalgia dataset. To run ImageNomer, execute the following command:
 
 .. code-block:: bash
 
@@ -66,7 +69,7 @@ The repository contains the Fibromyalgia dataset. To run ImageNomer, execute the
 
 Then, navigate to http://localhost:8008 
 
-Data is stored in the `ImageNomer/data/user/cohorts` directory. Currently the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer starting with a csv file and BOLD timeseries.
+Data is stored in the `ImageNomer/data/user/cohorts` directory. Currently, the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer when starting with a csv file and BOLD timeseries.
 
 An additional description of the dataset layout in ImageNomer is coming soon.
 
