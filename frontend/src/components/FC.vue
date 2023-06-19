@@ -128,7 +128,7 @@ export default {
     color: #444;
 }
 .fc-div img {
-    width: 150px;
+    width: 200px;
 }
 .fc-div span {
     vertical-align: center;

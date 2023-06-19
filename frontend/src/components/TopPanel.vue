@@ -1,20 +1,21 @@
 <template>
 <v-sheet class='ma-1 pa-1'>
-    <!--<v-sheet class='text-h4 mb-2'>ImageNomer</v-sheet>-->
-    <v-img class='ma-2' src='./../assets/LogoImageNomer.png' alt='ImageNomer' height='54'></v-img>
-    <v-divider thickness='1'></v-divider>
-    <v-sheet class='d-inline-flex mt-2 mb-2'>
-        <v-select 
-            label='Cohort'
-            :items='store.cohorts'
-            v-model='cohort'
-            class='d-inline-flex mr-n6'
-        ></v-select>
-        <div class='text-body-1'>
-            <a href='https://imagenomer.readthedocs.io/en/latest/' class='mr-2' target='_blank'>Documentation</a>
-            <a href='https://github.com/TulaneMBB/ImageNomer' class='mr-2' target='_blank'>GitHub</a>
-            <a href='mailto:aorlichenko@tulane.edu' target='_blank'>Report Bugs</a>
-        </div>
+    <v-row>
+        <v-col>
+            <v-img class='ma-2 d-inline-flex' src='./../assets/LogoImageNomer.png' alt='ImageNomer' height='54px'></v-img>
+        </v-col>
+    </v-row>
+    <v-select 
+        label='Cohort'
+        :items='store.cohorts'
+        v-model='cohort'
+        density='compact'
+        class='d-inline-flex'
+    ></v-select>
+    <v-sheet class='d-inline-flex text-body-1'>
+        <a href='https://imagenomer.readthedocs.io/en/latest/' class='mr-2' target='_blank'>Documentation</a>
+        <a href='https://github.com/TulaneMBB/ImageNomer' class='mr-2' target='_blank'>GitHub</a>
+        <a href='mailto:aorlichenko@tulane.edu' target='_blank'>Report Bugs</a>
     </v-sheet>
 </v-sheet>
 </template>

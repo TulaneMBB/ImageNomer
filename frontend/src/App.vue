@@ -13,6 +13,13 @@
             </v-col>
         </v-row>
     </v-main>
+    <v-footer>
+        <v-row>
+            <v-col class='text-center'>
+                &copy; Anton Orlichenko 2023
+            </v-col>
+        </v-row>
+    </v-footer>
 </v-app>
 </template>
 
