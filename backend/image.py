@@ -70,7 +70,11 @@ def groups_hist_private(df, groups, field):
     ylabels = []
     for group in groups.keys():
         ylabels.append(group)
-        lst = list(df.loc[groups[group], field])
+        # Check if int key has been converted to string for frontend
+        try:
+            lst = df.loc[groups[group], field].tolist()
+        except:
+            lst = df.loc[[int(a) for a in groups[group]], field].tolist()
         # Remove NaNs
         if isinstance(lst[0], str) or isinstance(lst[1], str):
             lst = [a for a in lst if not isinstance(a, float)]
