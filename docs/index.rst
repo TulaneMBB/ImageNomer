@@ -19,7 +19,9 @@ This demo contains a single Fibromyalgia dataset from OpenNeuro.org, the same as
 
 Once you have loaded ImageNomer, you can check out the :ref:`Fibromyalgia-Tutorial`. 
 
-**The beta version of ImageNomer retains state for the duration of the session.** This includes generated correlation images, which may impact stability if many users access the web demo in a short amount of time.
+**Note: The beta version of ImageNomer retains state for the duration of the session.** 
+
+This includes generated correlation images, which may impact stability if many users access the web demo in a short amount of time.
 
 .. _Getting-Started:
 
@@ -69,7 +71,7 @@ The repository already contains the Fibromyalgia dataset. To run ImageNomer, exe
 
 Then, navigate to http://localhost:8008 
 
-Data is stored in the `ImageNomer/data/user/cohorts` directory. Currently, the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer when starting with a csv file and BOLD timeseries.
+Data is stored in the "ImageNomer/data/anton/cohorts" directory. Currently, the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer when starting with a csv file and BOLD timeseries.
 
 An additional description of the dataset layout in ImageNomer is coming soon.
 
@@ -77,6 +79,7 @@ Changing the Code
 =================
 
 .. image:: images/FigureArchitecture.png
+   width: 600px
 
 ImageNomer consists of a a Python backend and a Vue javascript frontend. All Python packages are listed in the `requirements.txt <https://github.com/TulaneMBB/ImageNomer/blob/main/requirements.txt>`_ file. Vue requirements can be installed with *npm* from the `frontend` directory.
 
