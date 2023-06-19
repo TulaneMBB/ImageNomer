@@ -210,7 +210,7 @@ Further Analysis
 
 Another interesting analysis can be done by taking mean FC images of the 'Fibromyalgia == "Yes"' and 'Fibromyalgia == "No"' groups, and subtracting them in the "Image Math" tab.
 
-This is left to user to try out.
+This is left for the user to try out.
 
 Report Bugs
 ===========
