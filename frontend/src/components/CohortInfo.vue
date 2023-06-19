@@ -118,7 +118,10 @@ export default {
                 }
                 this.store.groups.push({query: this.query, subs: json});
             })
-            .catch(err => alert(err));
+            .catch(err => {
+                console.log(err);
+                alert('An error occurred; are you sure you spelled everything correctly? Field names are case-sensitive.');
+            });
         },
         resetPage() {
             this.page = 1;
