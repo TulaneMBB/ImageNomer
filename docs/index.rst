@@ -79,7 +79,7 @@ Changing the Code
 =================
 
 .. image:: images/FigureArchitecture.png
-   width: 600px
+   :width: 600px
 
 ImageNomer consists of a a Python backend and a Vue javascript frontend. All Python packages are listed in the `requirements.txt <https://github.com/TulaneMBB/ImageNomer/blob/main/requirements.txt>`_ file. Vue requirements can be installed with *npm* from the `frontend` directory.
 
