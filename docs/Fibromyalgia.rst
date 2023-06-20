@@ -5,7 +5,7 @@
 Fibromyalgia Dataset Tutorial
 =============================
 
-**Note: This `dataset ds004144 <https://openneuro.org/datasets/ds004144/versions/1.0.2>`_ is made up solely of female subjects.**
+**Note:** This `dataset ds004144 <https://openneuro.org/datasets/ds004144/versions/1.0.2>`_ is made up solely of female subjects.
 
 First, open the Fibromyalgia dataset in ImageNomer as described in :ref:`Getting-Started`.
 
@@ -260,7 +260,7 @@ You should see the following:
 .. image:: /images/Fibro_Tutorial/Fibro_decomp_corr_4.png
    :width: 600px
 
-We see that component 0 is the most negatively correlated with Rheumatology_Score_1 and component 4 is the most postively correlated, among the PCA decomposition of resting state scans.
+We see that component 0 is the most negatively correlated with Rheumatology_Score_1 and component 4 is the most postively correlated, among the PCA decomposition of resting state FC.
 
 For reference, a maximum absolute value of correlation from 0.35 to 0.4 is approximately what is seen in the PNC dataset when correlating FC with age, although that dataset contains many more subjects.
 
