@@ -188,10 +188,12 @@ You should see the following:
 
 Note the sparsity of Lasso compared to Ridge. These model estimations were performed on 80% training, 20% test splits, so there is a lot of variability in the individual runs.
 
+In case you are curious, logistic regression yields about a 75% accuracy on the test set.
+
 Partial Correlation
 ===================
 
-All tasks are available for partial correlation under the "PC" tab. It is less interesting for this dataset.
+All tasks that are available for FC and available for partial correlation under the "PC" tab. Partial correlation is less interesting for this dataset.
 
 Click on the "PC" tab.
 
