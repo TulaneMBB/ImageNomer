@@ -5,6 +5,8 @@
 Fibromyalgia Dataset Tutorial
 =============================
 
+**Note: This `dataset ds004144 <https://openneuro.org/datasets/ds004144/versions/1.0.2>`_ is made up solely of female subjects.**
+
 First, open the Fibromyalgia dataset in ImageNomer as described in :ref:`Getting-Started`.
 
 You should be able to see the following image:
@@ -127,6 +129,13 @@ You should see the following:
 
 Note that there is a possibly statistically significant difference in BMI between the two groups. Not too large of a difference, but potentially interesting.
 
+Likewise, try to correlate "Fibromalgia_Impact_Score" with "Hamilton_Depression_Score".
+
+You should see the following:
+
+.. image:: /images/Fibro_Tutorial/Fibro_corr_fibro_depression.png
+   :width: 600px
+
 Phenotype-FC Correlations
 =========================
 
@@ -202,8 +211,63 @@ You should see something like the following:
 .. image:: /images/Fibro_Tutorial/Fibro_pc_epr.png
    :width: 600px
 
-Decomposition and SNPS
-======================
+Decomposition
+=============
+
+We have created PCA decompositions of resting state and epr FC using the procedure in `this notebook <https://github.com/TulaneMBB/ImageNomer/blob/main/notebooks/ImageNomer27FibromyalgiaPCADecomp.ipynb>`_.
+
+Let's take a look at them in ImageNomer.
+
+Click on the "Decomposition" tab.
+
+Select "restpca" under the "Decomposition" dropdown.
+
+Use the slider to select the zeroth component.
+
+You should see the following:
+
+.. image:: /images/Fibro_Tutorial/Fibro_decomp_restpca.png
+   :width: 600px
+
+Use the component slider or input box to the right to change to component 1.
+
+You should see the following:
+
+.. image:: /images/Fibro_Tutorial/Fibro_decomp_restpca_1.png
+   :width: 600px
+
+Click on the "Correlate Components" dropdown and select "pheno".
+
+Select "Rheumatology_Score_1" under the "Phenotype" dropdown.
+
+Move the "To Component" slider all the way to the right.
+
+Click "Correlate Pheno". 
+
+You should see the following:
+
+.. image:: /images/Fibro_Tutorial/Fibro_decomp_corr.png
+   :width: 600px
+
+Scroll the "To Component" slider to select 8 components.
+
+Scroll the "Component" slider to select component 4.
+
+Click "Correlate Pheno".
+
+You should see the following:
+
+.. image:: /images/Fibro_Tutorial/Fibro_decomp_corr_4.png
+   :width: 600px
+
+We see that component 0 is the most negatively correlated with Rheumatology_Score_1 and component 4 is the most postively correlated, among the PCA decomposition of resting state scans.
+
+For reference, a maximum absolute value of correlation from 0.35 to 0.4 is approximately what is seen in the PNC dataset when correlating FC with age, although that dataset contains many more subjects.
+
+Age prediction is the easiest task in the PNC dataset, with almost 100% ability to distinguish between the FC of very young children and the FC of young adults.
+
+SNPs
+====
 
 Coming soon.
 
