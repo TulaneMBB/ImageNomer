@@ -246,17 +246,18 @@ def corr_fc():
 @app.route('/analysis/corr/save', methods=(['GET']))
 def corr_save():
     args = request.args
-    args_err = validate_args(['id'], 
+    args_err = validate_args(['id', 'cohort'], 
         args, request.url) 
     if args_err:
         return args_err
     # Params
     di = args['id']
+    co = args['cohort']
     fcimg = session.load(di)
     fcvec = data.mat2vec(fcimg)
     fname = f'corr/id{di}.pkl'
     wobj = dict(w=fcvec, noremap='true', trsubs=[], tsubs=[], desc='test')
-    data.save_weights(wobj, 'anton', 'test', fname)
+    data.save_weights(wobj, 'anton', co, fname)
     return jsonify({'resp': fname})
 
 ''' Correlate demographic features with SNPs '''
@@ -339,13 +340,18 @@ def corr_decomp():
     ws = []
     pheno = []
     for sub in group:
-        if data.has_decomp_weights('anton', coh, sub, name):
-            p = df.loc[sub][field]
-            if cat is not None:
-                p = p == cat
-            pheno.append(p)
+        # TODO check if weights exist doesn't work for some reason
+        #if data.has_decomp_weights('anton', coh, sub, name):
+        p = df.loc[sub][field]
+        if cat is not None:
+            p = p == cat
+        try:
             w = data.get_decomp_weights('anton', coh, sub, name)
+            pheno.append(p)
             ws.append(w)
+        except:
+            #print(data.get_decomp_weights_name('anton', coh, sub, name))
+            pass
     # Find correlation
     rho = correlation.corr_decomp_pheno(ws, pheno, n)
     # Plot correlation over components

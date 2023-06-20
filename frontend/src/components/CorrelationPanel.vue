@@ -199,7 +199,7 @@ export default {
         },
         saveImage(type) {
             const id = type == 'corr' ? this.rid : this.pid;
-            fetch(`/analysis/corr/save?id=${id}`)
+            fetch(`/analysis/corr/save?cohort=${this.store.cohort}&id=${id}`)
             .then(resp => resp.json())
             .then(json => {
                 if (json.error) {

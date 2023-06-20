@@ -75,9 +75,11 @@ export default {
     },
     methods: {
         rm() {
-            // TODO implement remove
+            // TODO remove on server
             console.log(this.selected);
-            //idcs = this.selected.map(item => item.idx);
+            this.selected.forEach(item => {
+                this.store.saved = this.store.saved.filter(it => item.idx != it.idx);
+            });
         },
         doImageMath() {
             fetch(`/math/image?expr=${enc(this.expr)}`)
