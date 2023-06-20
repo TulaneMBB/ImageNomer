@@ -11,7 +11,7 @@ fMRI and omics viewer for machine learning
 
 ## On-Line Demo
 
-There is a live demo available at [https://aorliche.github.io/ImageNomer/live](https://aorliche.github.io/ImageNomer/live).
+There is a live demo available at [https://aorliche.github.io/ImageNomer/](https://aorliche.github.io/ImageNomer/).
 
 See [the Fibromyalgia dataset tutorial](https://imagenomer.readthedocs.io/en/latest/Fibromyalgia.html#fibromyalgia-tutorial) for a walkthrough of how to use ImageNomer.
 

@@ -13,7 +13,7 @@ ImageNomer Documentation
 Getting Started - Live Web Demo
 ===============================
 
-There is a live web demo running at https://aorliche.github.io/ImageNomer/live
+There is a live web demo running at https://aorliche.github.io/ImageNomer/
 
 This demo contains a single Fibromyalgia dataset from OpenNeuro.org, the same as contained in the Docker image.
 
