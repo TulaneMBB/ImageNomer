@@ -197,7 +197,7 @@ You should see the following:
 
 Note the sparsity of Lasso compared to Ridge. These model estimations were performed on 80% training, 20% test splits, so there is a lot of variability in the individual runs.
 
-Also note that in these runs, we may place the rest and epr scans of one subject into the same training and test sets, respectively. Previous studies have shown that fMRI has a large amount of identifiability (see `Finn et al. 2015 <https://doi.org/10.1038/nn.4135>`_), and it is likely that some memorization of individual subjects is occuring.
+Also note that, in these analyses, we may place the rest and epr scans of a single subject into the training and test sets, respectively (or vice versa). Previous studies have shown that fMRI has a large amount of identifiability (see `Finn et al. 2015 <https://doi.org/10.1038/nn.4135>`_), and it is likely that some memorization of individual subjects is occuring.
 
 In case you are curious, logistic regression yields about a 75% accuracy on the test set (with the additional caveat of memorization).
 
