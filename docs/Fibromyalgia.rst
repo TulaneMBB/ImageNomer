@@ -204,7 +204,7 @@ In case you are curious, logistic regression yields about a 75% accuracy on the 
 Partial Correlation
 ===================
 
-All tasks that are available for FC and available for partial correlation under the "PC" tab. Partial correlation is less interesting for this dataset.
+All tasks that are available for FC are available for partial correlation under the "PC" tab. Partial correlation is less interesting for this dataset.
 
 Click on the "PC" tab.
 
