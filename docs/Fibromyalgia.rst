@@ -197,7 +197,9 @@ You should see the following:
 
 Note the sparsity of Lasso compared to Ridge. These model estimations were performed on 80% training, 20% test splits, so there is a lot of variability in the individual runs.
 
-In case you are curious, logistic regression yields about a 75% accuracy on the test set.
+Also note that in these runs, we may place the rest and epr scans of one subject into the same training and test sets, respectively. Previous studies have shown that fMRI has a large amount of identifiability (see `Finn et al. 2015 <https://doi.org/10.1038/nn.4135>`_), and it is likely that some memorization of individual subjects is occuring.
+
+In case you are curious, logistic regression yields about a 75% accuracy on the test set (with the additional caveat of memorization).
 
 Partial Correlation
 ===================
@@ -264,7 +266,7 @@ We see that component 0 is the most negatively correlated with Rheumatology_Scor
 
 For reference, a maximum absolute value of correlation from 0.35 to 0.4 is approximately what is seen in the PNC dataset when correlating FC with age, although that dataset contains many more subjects.
 
-Age prediction is the easiest task in the PNC dataset, with almost 100% ability to distinguish between the FC of very young children and the FC of young adults.
+Age prediction is the easiest task in the PNC dataset, with almost 100% ability to distinguish between the FC of very young children and the FC of young adults (see `Hu et al. 2019 <https://ieeexplore.ieee.org/document/8666981>`_).
 
 SNPs
 ====
