@@ -71,7 +71,7 @@ The repository already contains the Fibromyalgia dataset. To run ImageNomer, exe
 
 Then, navigate to http://localhost:8008 
 
-Data is stored in the "ImageNomer/data/anton/cohorts" directory. Currently, the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer when starting with a csv file and BOLD timeseries.
+Data is stored in the "ImageNomer/data/anton/cohorts" directory. Each cohort has its own subdirectory. Currently, the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer when starting with a csv file and BOLD timeseries.
 
 An additional description of the dataset layout in ImageNomer is coming soon.
 
