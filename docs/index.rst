@@ -31,7 +31,7 @@ Getting Started with Docker
 Install docker
 --------------
 
-You need to install docker for this to work.
+You need to install docker for this to work. Refer to, e.g., https://www.docker.com/ for instructions on how to install for your operating system.
 
 Download and run the docker image
 ---------------------------------
@@ -43,7 +43,7 @@ Download and run the docker image
 
 We expose port 8008 of the container to be accessible from your web browser.
 
-In your browser, navigate to http://localhost:8008
+In your browser, navigate to http://localhost:8008/
 
 Explore example data
 --------------------

@@ -7,7 +7,7 @@ Fibromyalgia Dataset Tutorial
 
 **Note:** This `dataset ds004144 <https://openneuro.org/datasets/ds004144/versions/1.0.2>`_ is made up solely of female subjects.
 
-First, open the Fibromyalgia dataset in ImageNomer as described in :ref:`Getting-Started`.
+First, open the Fibromyalgia dataset in ImageNomer as described in :ref:`Getting-Started`. Alternatively, you can instead use the `live on-line demo <https://aorliche.github.io/ImageNomer/live/>`_.
 
 You should be able to see the following image:
 
