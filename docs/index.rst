@@ -85,6 +85,11 @@ ImageNomer consists of a a Python backend and a Vue javascript frontend. All Pyt
 
 Please `reach out <mailto:aorlichenko@tulane.edu>`_ to me with any questions.
 
+Known Bugs
+==========
+
+- We know that sometimes one or more FC or PC images in the FC/PC view may get stuck on "loading". This seems to be a problem with the Vue frontend code. We are working on a fix.
+
 ..
     Indices and tables
     ==================
