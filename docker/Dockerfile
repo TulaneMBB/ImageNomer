@@ -11,4 +11,4 @@ WORKDIR /root
 RUN git clone https://github.com/TulaneMBB/ImageNomer
 RUN cd ImageNomer && pip install -r requirements.txt --break-system-packages
 
-CMD cd ImageNomer && pwd && ls data/anton/cohorts/ && python3 backend/app.py
+CMD cd ImageNomer && pwd && ls data && python3 backend/app.py
