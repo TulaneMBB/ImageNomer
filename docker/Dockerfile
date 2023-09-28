@@ -7,8 +7,8 @@ RUN apt-get install -y python3 python3-pip git
 # --break-system-packages is bad, however, we only need to run ImageNomer
 # and I'm currently not able to get rid of the "externally managed environment" 
 # error using venv
-WORKDIR ~
+WORKDIR /root
 RUN git clone https://github.com/TulaneMBB/ImageNomer
 RUN cd ImageNomer && pip install -r requirements.txt --break-system-packages
 
-CMD cd ImageNomer && python3 backend/app.py
+CMD cd ImageNomer && pwd && ls data/anton/cohorts/ && python3 backend/app.py
