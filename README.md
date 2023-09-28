@@ -54,11 +54,11 @@ docker -run -p 8008:8008 \
     ghcr.io/aorliche/image-nomer:latest
 ```
 
-Your local cohort should now show up in the ImageNomer browser-based GUI, asuming you have created a "demographics.pkl" file in the cohort directory, along with Power264-template FC in an fc subdirectory of the cohort directory.
+Your local cohort should now show up in the ImageNomer browser-based GUI, asuming you have created a "demographics.pkl" file in the cohort directory, along with <a href='https://github.com/brainspaces/power264'>Power264-template</a> FC in an fc subdirectory of the cohort directory.
 
 Please check the layout of the Fibromyalgia dataset provided in this repo and the Jupyter notebook mentioned above.
 
-Currently, ImageNomer assumes you are using the 264-ROI Power atlas.
+Currently, ImageNomer assumes you are using the <a href='https://github.com/brainspaces/power264'>264-ROI Power atlas</a>.
 
 ## Architecture
 
