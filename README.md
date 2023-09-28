@@ -30,7 +30,7 @@ docker pull ghcr.io/aorliche/image-nomer:latest
 docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
 ```
 
-The docker images are currently available for the amd64 and arm64 architectures.
+Docker images are currently available for the amd64 and arm64 architectures.
 
 Visit [our ReadTheDocs site](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial.
 
@@ -43,6 +43,8 @@ notebooks/ImageNomer26FibromyalgiaDataset.ipynb
 ```
 
 to see how that data was imported, starting from a csv and BOLD timeseries.
+
+## Use Docker With Your Own Data
 
 To use the ImageNomer docker image with your own data, you must map your local directory to the docker image when starting the container.
 
