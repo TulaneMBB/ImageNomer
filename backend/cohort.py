@@ -6,9 +6,9 @@ from natsort import natsorted
 # Our modules
 import data
 
-def ls_cohorts(user):
+def ls_cohorts():
     return [f.name for f in 
-        Path(f'data/{user}/cohorts').iterdir() if f.is_dir()]
+        Path(f'data/').iterdir() if f.is_dir()]
 
 def get_weights_tree(basepath):
     node = {}
@@ -80,8 +80,8 @@ def get_comps(comps):
             res[name]['weights'] = wdct[name] 
     return res
 
-def get_cohort(user, cohort):
-    p = Path(f'data/{user}/cohorts/{cohort}')
+def get_cohort(cohort):
+    p = Path(f'data/{cohort}')
     fc = p/'fc'
     partial = p/'partial'
     demo = p/'demographics.pkl'
@@ -96,7 +96,7 @@ def get_cohort(user, cohort):
         dat['partial'] = [f.name 
             for f in partial.iterdir() if not f.is_dir()]
     if demo.exists():
-        dat['demo'] = data.get_demo(user, cohort)
+        dat['demo'] = data.get_demo(cohort)
     if weights.is_dir():
         dat['weights'] = get_weights_tree(weights)
     if snps.is_dir():
@@ -105,8 +105,8 @@ def get_cohort(user, cohort):
         dat['decomp'] = get_comps(components)
     return dat
 
-def get_tasks(user, cohort):
-    c = get_cohort(user, cohort)
+def get_tasks(cohort):
+    c = get_cohort(cohort)
     tasks = set()
     for fname in c['fc']:
         tasks.add(re.match('.*task-([^_]+)', fname).group(1))

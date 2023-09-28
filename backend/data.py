@@ -29,39 +29,39 @@ def mat2vec(fc):
     a,b = np.triu_indices(d,1)
     return fc[a,b]
 
-def get_fc_fname(user, cohort, sub, task=None, ses=None, typ='fc'):
+def get_fc_fname(cohort, sub, task=None, ses=None, typ='fc'):
     task = f'_task-{task}' if task is not None else ''
     ses = f'_ses-{ses}' if ses is not None else ''
-    fname = f'data/{user}/cohorts/{cohort}/{typ}/{sub}{task}{ses}_{typ}.npy'
+    fname = f'data/{cohort}/{typ}/{sub}{task}{ses}_{typ}.npy'
     return fname
 
-def has_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
-    p = Path(get_fc_fname(user, cohort, sub, task, ses, typ))
+def has_fc(cohort, sub, task=None, ses=None, typ='fc'):
+    p = Path(get_fc_fname(cohort, sub, task, ses, typ))
     return p.exists()
 
-def get_fc(user, cohort, sub, task=None, ses=None, typ='fc'):
-    return np.load(get_fc_fname(user, cohort, sub, task, ses, typ))
+def get_fc(cohort, sub, task=None, ses=None, typ='fc'):
+    return np.load(get_fc_fname(cohort, sub, task, ses, typ))
 
-def has_snps(user, cohort, sub, subset):
-    fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
+def has_snps(cohort, sub, subset):
+    fname = f'data/{cohort}/snps/{sub}_set-{subset}_snps.npy'
     return Path(fname).exists
 
-def has_decomp_weights(user, cohort, sub, name):
-    return Path(get_decomp_weights_name(user, cohort, sub, name)).exists
+def has_decomp_weights(cohort, sub, name):
+    return Path(get_decomp_weights_name(cohort, sub, name)).exists
    
-def get_decomp_weights_name(user, cohort, sub, name): 
-    fname = f'data/{user}/cohorts/{cohort}/decomp/{name}-weights/{sub}_comp-{name}_weights.npy'
+def get_decomp_weights_name(cohort, sub, name): 
+    fname = f'data/{cohort}/decomp/{name}-weights/{sub}_comp-{name}_weights.npy'
     return fname
 
-def get_decomp_weights(user, cohort, sub, name):
-    return np.load(get_decomp_weights_name(user, cohort, sub, name))
+def get_decomp_weights(cohort, sub, name):
+    return np.load(get_decomp_weights_name(cohort, sub, name))
 
-def get_snps(user, cohort, sub, subset):
-    fname = f'data/{user}/cohorts/{cohort}/snps/{sub}_set-{subset}_snps.npy'
+def get_snps(cohort, sub, subset):
+    fname = f'data/{cohort}/snps/{sub}_set-{subset}_snps.npy'
     return np.load(fname)
 
-def get_demo(user, cohort, file=False):
-    fname = f'data/{user}/cohorts/{cohort}/demographics.pkl'
+def get_demo(cohort, file=False):
+    fname = f'data/{cohort}/demographics.pkl'
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
@@ -69,14 +69,14 @@ def get_demo(user, cohort, file=False):
 Weights dictionaries contain at least the following keys:
 w (numpy.ndarray, flat 1D array), trsubs (list(str)), tsubs (list(str)), desc (str)
 '''
-def get_weights(user, cohort, fname):
-    fname = f'data/{user}/cohorts/{cohort}/weights/{fname}'
+def get_weights(cohort, fname):
+    fname = f'data/{cohort}/weights/{fname}'
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
-def get_weights_dir(user, cohort, fname, wobj):
+def get_weights_dir(cohort, fname, wobj):
     p = Path(fname).parts[:-1]
-    basedir = f'data/{user}/cohorts/{cohort}/weights'
+    basedir = f'data/{cohort}/weights'
     p = [basedir] + list(p)
     p = Path('/'.join(p))
     ws = []
@@ -89,26 +89,27 @@ def get_weights_dir(user, cohort, fname, wobj):
                 ws.append(dct['w'])
     return np.stack(ws)
 
-def save_weights(wobj, user, cohort, fname):
-    with open(f'data/{user}/cohorts/{cohort}/weights/{fname}', 'wb') as f:
+def save_weights(wobj, cohort, fname):
+    with open(f'data/{cohort}/weights/{fname}', 'wb') as f:
         pickle.dump(wobj, f)
 
-def get_conn_stats(typ, user, cohort, fnames):
+def get_conn_stats(typ, cohort, fnames):
     imgs = []
     ftype = fnames[0].split('_')[-1].split('.')[0]
     for fname in fnames:
-        path = f'data/{user}/cohorts/{cohort}/{ftype}/{fname}'
+        path = f'data/{cohort}/{ftype}/{fname}'
         img = np.load(path)
         imgs.append(img)
     imgs = np.stack(imgs)
-    match typ:
-        case 'mean': return np.mean(imgs, axis=0)
-        case 'std': return np.std(imgs, axis=0)
+    if typ == 'mean':
+        return np.mean(imgs, axis=0)
+    elif typ == 'std':
+        return np.std(imgs, axis=0)
 
-def get_snps_stats(user, cohort, fnames):
+def get_snps_stats(cohort, fnames):
     snps = []
     for fname in fnames:
-        path = f'data/{user}/cohorts/{cohort}/snps/{fname}'
+        path = f'data/{cohort}/snps/{fname}'
         dat = np.load(path)
         snps.append(dat)
     snps = np.stack(snps)
@@ -119,10 +120,12 @@ def get_snps_stats(user, cohort, fnames):
     return [miss, recv, het, homo]
 
 def get_top(data, n=20, rank='abs'):
-    match rank:
-        case 'abs': idcs = np.argsort(np.abs(data))
-        case 'pos': idcs = np.argsort(data)
-        case 'neg': idcs = np.argsort(-data)
+    if rank == 'abs':
+        idcs = np.argsort(np.abs(data))
+    elif rank == 'pos':
+        idcs = np.argsort(data)
+    elif rank == 'neg':
+        idcs = np.argsort(-data)
     if n > len(idcs):
         n = len(idcs)
     return data[idcs[-1:-n:-1]], idcs[-1:-n:-1]
@@ -143,13 +146,13 @@ def get_quartiles(ws):
     q3 = math.floor(0.75*n)
     return ws[int(q1)], ws[int(q3)]
 
-def get_comp(user, coh, name, n):
-    fname = f'data/{user}/cohorts/{coh}/decomp/{name}-comps/{name}_comp-{n}.npy'
+def get_comp(coh, name, n):
+    fname = f'data/{coh}/decomp/{name}-comps/{name}_comp-{n}.npy'
     return np.load(fname)
 
-def get_var_exp(user, coh, name):
-    pcomps = Path(f'data/{user}/cohorts/{coh}/decomp/{name}-comps')
-    pweights = Path(f'data/{user}/cohorts/{coh}/decomp/{name}-weights')
+def get_var_exp(coh, name):
+    pcomps = Path(f'data/{coh}/decomp/{name}-comps')
+    pweights = Path(f'data/{coh}/decomp/{name}-weights')
     comps = []
     for c in pcomps.iterdir():
         mobj = re.match(f'{name}_comp-([0-9]+).npy', c.name)
@@ -172,11 +175,11 @@ def get_var_exp(user, coh, name):
     var_exp = var_exp/np.sum(var_exp)
     return np.sort(var_exp)[::-1]
 
-def relabel_snps(user, cohort, idcs, subset, labtype=None):
+def relabel_snps(cohort, idcs, subset, labtype=None):
     if labtype is None or labtype == 'index':
         return idcs
     if labtype == 'rs':
-        fname = f'data/{user}/cohorts/{cohort}/snps_{subset}.pkl'
+        fname = f'data/{cohort}/snps_{subset}.pkl'
         with open(fname, 'rb') as f:
             st = pickle.load(f)
         lst = list(st)

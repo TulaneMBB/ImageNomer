@@ -44,7 +44,7 @@ def favicon():
 def ls():
     args = request.args
     task = args['task'] if 'task' in args else None
-    return jsonify({'cohorts': cohort.ls_cohorts('anton')})
+    return jsonify({'cohorts': cohort.ls_cohorts()})
 
 '''Get info about subjects'''
 @app.route('/data/info', methods=(['GET']))
@@ -54,7 +54,7 @@ def info():
     if args_err:
         return args_err
     coh = args['cohort']
-    return jsonify(cohort.get_cohort('anton', coh))
+    return jsonify(cohort.get_cohort(coh))
 
 '''Get subgroup of cohort'''
 @app.route('/data/group', methods=(['GET']))
@@ -65,7 +65,7 @@ def group():
         return args_err
     cohort = args['cohort']
     query = args['query']
-    demo = data.get_demo('anton', cohort)
+    demo = data.get_demo(cohort)
     df = data.demo2df(demo)
     group = [str(i) for i in list(df.query(query).index)]
     return jsonify(group)
@@ -84,7 +84,7 @@ def demo_hist():
     cohort = args['cohort']
     field = args['field']
     groups = json.loads(args['groups'])
-    demo = data.get_demo('anton', cohort)
+    demo = data.get_demo(cohort)
     df = data.demo2df(demo)
     img = image.groups_hist(df, groups, field)
     return jsonify({'data': img})
@@ -106,7 +106,7 @@ def fc():
     remap = 'remap' in args
     typ = args['type'] if 'type' in args else 'fc'
     # Load and display FC
-    fc = data.get_fc('anton', cohort, sub, task, ses, typ=typ)
+    fc = data.get_fc(cohort, sub, task, ses, typ=typ)
     fc = data.vec2mat(fc, fillones=False)
     if remap:
         fc = power.remap(fc)
@@ -125,7 +125,7 @@ def spns():
     sub = args['sub']
     subset = args['set']
     # Load and display histogram of SNP values
-    snps = data.get_snps('anton', coh, sub, subset)
+    snps = data.get_snps(coh, sub, subset)
     img = image.snps_hist(snps)
     return jsonify({'data': img})
 
@@ -144,7 +144,7 @@ def corr_demo():
     field2 = args['field2']
     cat = args['cat'] if 'cat' in args else None
     # Load demographics 
-    demo = data.get_demo('anton', cohort)
+    demo = data.get_demo(cohort)
     df = data.demo2df(demo)
     # Load group
     subset = df.query(query) if query != 'All' else df
@@ -194,19 +194,19 @@ def corr_fc():
     typ = args['fctype']
     cat = args['cat'] if 'cat' in args else None
     # Load demographics
-    demo = data.get_demo('anton', coh)
+    demo = data.get_demo(coh)
     df = data.demo2df(demo)
     # Load group
     group = df.index if query == 'All' else df.query(query).index
     # Get list of tasks
-    tasks = (cohort.get_tasks('anton', coh) 
+    tasks = (cohort.get_tasks(coh) 
         if task is None else [task])
     # Get fcs and pheno
     fcs = []
     pheno = []
     for task in tasks:
         for sub in group:
-            if data.has_fc('anton', coh, sub, task, ses, typ=typ):
+            if data.has_fc(coh, sub, task, ses, typ=typ):
                 p = df.loc[sub][field]
                 if cat is not None:
                     p = p == cat
@@ -215,7 +215,7 @@ def corr_fc():
                 elif isnan(p):
                     continue
                 pheno.append(p)
-                fc = data.get_fc('anton', coh, sub, task, ses, typ=typ)
+                fc = data.get_fc(coh, sub, task, ses, typ=typ)
                 fcs.append(fc)
     fcs = np.stack(fcs)
     # Get correlation and p-value
@@ -257,7 +257,7 @@ def corr_save():
     fcvec = data.mat2vec(fcimg)
     fname = f'corr/id{di}.pkl'
     wobj = dict(w=fcvec, noremap='true', trsubs=[], tsubs=[], desc='test')
-    data.save_weights(wobj, 'anton', co, fname)
+    data.save_weights(wobj, co, fname)
     return jsonify({'resp': fname})
 
 ''' Correlate demographic features with SNPs '''
@@ -279,7 +279,7 @@ def corr_snps():
     hap = int(args['hap'])
     labtype = args['labtype'] if 'labtype' in args else 'rs'
     # Load demographics
-    demo = data.get_demo('anton', coh)
+    demo = data.get_demo(coh)
     df = data.demo2df(demo)
     # Load group
     group = df.index if query == 'All' else df.query(query).index
@@ -287,9 +287,9 @@ def corr_snps():
     snps = []
     pheno = []
     for sub in group:
-        if data.has_snps('anton', coh, sub, subset):
+        if data.has_snps(coh, sub, subset):
             pheno.append(df.loc[sub][field])
-            snp = data.get_snps('anton', coh, sub, subset)
+            snp = data.get_snps(coh, sub, subset)
             snp = snp == hap
             snps.append(snp)
     snps = np.stack(snps)
@@ -309,7 +309,7 @@ def corr_snps():
     top_bot_idcs = np.concatenate([bot, top])
     top_bot = rho[top_bot_idcs]
     #top_bot, top_bot_idcs = data.get_top_bot_snps(rho, idcs, n)
-    labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, labtype)
+    labs = data.relabel_snps(coh, top_bot_idcs, subset, labtype)
     top_img = image.bar(top_bot, labs)
     return jsonify({'rho': rho_img, 'top': top_img})
 
@@ -332,7 +332,7 @@ def corr_decomp():
     n = int(args['n'])
     cat = args['cat'] if 'cat' in args else None
     # Load demographics
-    demo = data.get_demo('anton', coh)
+    demo = data.get_demo(coh)
     df = data.demo2df(demo)
     # Load group
     group = df.index if query == 'All' else df.query(query).index
@@ -341,16 +341,16 @@ def corr_decomp():
     pheno = []
     for sub in group:
         # TODO check if weights exist doesn't work for some reason
-        #if data.has_decomp_weights('anton', coh, sub, name):
+        #if data.has_decomp_weights(coh, sub, name):
         p = df.loc[sub][field]
         if cat is not None:
             p = p == cat
         try:
-            w = data.get_decomp_weights('anton', coh, sub, name)
+            w = data.get_decomp_weights(coh, sub, name)
             pheno.append(p)
             ws.append(w)
         except:
-            #print(data.get_decomp_weights_name('anton', coh, sub, name))
+            #print(data.get_decomp_weights_name(coh, sub, name))
             pass
     # Find correlation
     rho = correlation.corr_decomp_pheno(ws, pheno, n)
@@ -377,7 +377,7 @@ def corr_decomp_snps():
     ntop = int(args['ntop'])
     labtype = args['labtype']
     # Load demographics
-    demo = data.get_demo('anton', coh)
+    demo = data.get_demo(coh)
     df = data.demo2df(demo)
     # Load group
     group = df.index if query == 'All' else df.query(query).index
@@ -385,11 +385,11 @@ def corr_decomp_snps():
     ws = []
     snps = []
     for sub in group:
-        if (data.has_decomp_weights('anton', coh, sub, name) and
-            data.has_snps('anton', coh, sub, subset)):
-            w = data.get_decomp_weights('anton', coh, sub, name)
+        if (data.has_decomp_weights(coh, sub, name) and
+            data.has_snps(coh, sub, subset)):
+            w = data.get_decomp_weights(coh, sub, name)
             ws.append(w)
-            snp = data.get_snps('anton', coh, sub, subset)
+            snp = data.get_snps(coh, sub, subset)
             snp = snp == hap
             snps.append(snp)
     # Find correlation
@@ -404,7 +404,7 @@ def corr_decomp_snps():
     widcs = np.floor(best_idcs/b).astype('int')
     sidcs = best_idcs-widcs*b
     # Label
-    snps_labs = data.relabel_snps('anton', coh, sidcs, subset, labtype)
+    snps_labs = data.relabel_snps(coh, sidcs, subset, labtype)
     labs = [f'{i}-{snp}' for i,snp in zip(widcs, snps_labs)]
     # Return image
     dist_img = image.plot(rho[idcs])
@@ -446,24 +446,24 @@ def weights_fc():
     query = args['query'] if 'query' in args else 'All'
     remap = 'remap' in args
     # Get weights
-    wobj = data.get_weights('anton', coh, fname)
+    wobj = data.get_weights(coh, fname)
     w = wobj['w']
     # If multiplying, load subject features
     if mult != 'no':
         # Load demographics
-        demo = data.get_demo('anton', coh)
+        demo = data.get_demo(coh)
         df = data.demo2df(demo)
         # Load group
         group = df.index if query == 'All' else df.query(query).index
         # Get list of tasks
-        tasks = (cohort.get_tasks('anton', coh) 
+        tasks = (cohort.get_tasks(coh) 
             if task == 'All' else [task])
         # Get fcs
         fcs = []
         for task in tasks:
             for sub in group:
-                if data.has_fc('anton', coh, sub, task, ses):
-                    fc = data.get_fc('anton', coh, sub, task, ses=None)
+                if data.has_fc(coh, sub, task, ses):
+                    fc = data.get_fc(coh, sub, task, ses=None)
                     fcs.append(fc)
         fcs = np.stack(fcs)
         # Multiply
@@ -510,11 +510,11 @@ def weights_snps():
     avg = 'average' in args
     limiqr = 'limiqr' in args
     # Get weights
-    wobj = data.get_weights('anton', coh, fname)
+    wobj = data.get_weights(coh, fname)
     # If average, get all compatible in directory
     # RESHAPE because of sklearn coef_ dimensions
     if avg:
-        ws = data.get_weights_dir('anton', coh, fname, wobj)
+        ws = data.get_weights_dir(coh, fname, wobj)
         ws = ws.reshape(ws.shape[0], -1)
         w = np.mean(ws, axis=0)
     else:
@@ -560,7 +560,7 @@ def weights_snps():
         top_bot_idcs = np.concatenate([bidcs,tidcs])
         top_bot = w[top_bot_idcs]
     # top_bot, top_bot_idcs = data.get_top_bot_snps(part, idcs, n)
-    labs = data.relabel_snps('anton', coh, top_bot_idcs, subset, labtype)
+    labs = data.relabel_snps(coh, top_bot_idcs, subset, labtype)
     if avg:
         # top_bot_ws, _ = data.get_top_bot_snps(ws.transpose(1,0), idcs, n)
         top_img = image.boxplot(top_bot, labs)
@@ -612,7 +612,7 @@ def stats():
     # If mean or std dev
     # Get FC/partial images and calculate stat
     if typ in ['mean', 'std']:
-        res = data.get_conn_stats(typ, 'anton', coh, fnames)
+        res = data.get_conn_stats(typ, coh, fnames)
         mat = data.vec2mat(res, fillones=False)
         if remap:
            mat = power.remap(mat)
@@ -624,7 +624,7 @@ def stats():
     # If snps, make violin plot of missing, recessive, het, and dominant
     # No saving in cache
     elif typ == 'snps':
-        stats_lst = data.get_snps_stats('anton', coh, fnames)
+        stats_lst = data.get_snps_stats(coh, fnames)
         img = image.snps_violin(stats_lst)
         return jsonify({'data': img})
 
@@ -646,7 +646,7 @@ def component():
     n = int(args['n']) 
     remap = 'remap' in args
     # Get component, remap, and show as image
-    comp = data.get_comp('anton', coh, name, n)
+    comp = data.get_comp(coh, name, n)
     cimg = data.vec2mat(comp, fillones=False)
     if remap:
         cimg = power.remap(cimg)
@@ -669,7 +669,7 @@ def decomp_varexp():
     coh = args['cohort']
     name = args['name']
     # Get variance explained by component and also the number of components
-    varexp = data.get_var_exp('anton', coh, name)
+    varexp = data.get_var_exp(coh, name)
     img = image.plot(varexp)
     return jsonify({'data': img})
 
