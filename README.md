@@ -58,7 +58,7 @@ Your local cohort should now show up in the ImageNomer browser-based GUI, asumin
 
 Please check the layout of the Fibromyalgia dataset provided in this repo and the Jupyter notebook mentioned above.
 
-Currently, ImageNomer assumes you are using the <a href='https://github.com/brainspaces/power264'>264-ROI Power atlas</a>.
+Currently, ImageNomer assumes you are using the <a href='https://github.com/brainspaces/power264'>264-ROI Power atlas</a> (paper <a href='https://doi.org/10.1016%2Fj.neuron.2011.09.006'>link</a>).
 
 ## Architecture
 
