@@ -30,6 +30,8 @@ docker pull ghcr.io/aorliche/image-nomer:latest
 docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
 ```
 
+The docker images are currently available for the amd64 and arm64 architectures.
+
 Visit [our ReadTheDocs site](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial.
 
 ## Importing Your Data
@@ -41,6 +43,16 @@ notebooks/ImageNomer26FibromyalgiaDataset.ipynb
 ```
 
 to see how that data was imported, starting from a csv and BOLD timeseries.
+
+To use the ImageNomer docker image with your own data, you must map your local directory to the docker image when starting the container.
+
+```
+docker -run -p 8008:8008 -v /full/path/to/my/local/cohort/dir:/root/ImageNomer/data/MyCohort ghcr.io/aorliche/image-nomer:latest
+```
+
+Your local cohort should now show up in the ImageNomer browser-based GUI, asuming you have created a "demographics.pkl" file in the cohort directory, along with Power264-template FC in an fc subdirectory of the cohort directory.
+
+Please check the layout of the Fibromyalgia dataset provided in this repo and the Jupyter notebook mentioned above.
 
 Currently, ImageNomer assumes you are using the 264-ROI Power atlas.
 
