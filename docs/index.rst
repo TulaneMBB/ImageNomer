@@ -63,21 +63,29 @@ We have provided a second example `dataset ds004775 <https://openneuro.org/datas
 
 First, navigate to the "examples" directory of the ImageNomer GitHub repository in your browser. 
 
+.. image:: /images/ExamplesFolder.png
+   :width: 600px
+
 Download and unzip the included zip file.
 
-To start the Docker image including the data you just unzipped, execute the following command:
+To start the Docker image with inclusion of the data you just unzipped, execute the following command:
 
 .. code-block:: bash
 
     docker -run -p 8008:8008 \
-        -v /full/path/to/my/unzipped/cohort:/root/ImageNomer/data/MyCohort \
+        -v /full/path/to/my/unzipped/cohort:/root/ImageNomer/data/VicariousPunishment \
         ghcr.io/aorliche/image-nomer:latest
 
-Navigate to http://localhost:8008/, or if you already there, refresh the page.
+Navigate to http://localhost:8008/, or, if already there, refresh the page.
 
 The new cohort should be available under the dropdown menu.
 
+.. image:: /images/VicariousPunishment.png
+   :width: 600px
+
 See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer format when starting with a csv file and BOLD timeseries.
+
+Also see the `Punish2FC_ExampleImNomer.ipynb <https://github.com/TulaneMBB/ImageNomer/blob/main/notebooks/Punish2FC_ExampleImNomer.ipynb>`_ notebook file for an example of a smaller dataset.
 
 Run By Cloning GitHub Repository
 ================================

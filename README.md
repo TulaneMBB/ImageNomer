@@ -33,7 +33,7 @@ docker run -p 8008:8008 ghcr.io/aorliche/image-nomer:latest
 Docker images are currently available for amd64 and arm64 architectures. To use arm64, use the following docker image instead of the one above:
 
 ```bash
-image-nomer-arm
+image-nomer-arm64
 ```
 
 Visit [our ReadTheDocs site](https://imagenomer.readthedocs.io/en/latest/) for more information and a comprehensive tutorial.
@@ -48,7 +48,7 @@ notebooks/ImageNomer26FibromyalgiaDataset.ipynb
 
 to see how that data was imported, starting from a csv and BOLD timeseries.
 
-## Use Docker With Your Own Data
+## Using Docker Image With Your Own Data
 
 To use the ImageNomer docker image with your own data, you must map your local directory to the docker image when starting the container.
 
@@ -58,7 +58,7 @@ docker -run -p 8008:8008 \
     ghcr.io/aorliche/image-nomer:latest
 ```
 
-We have provided a second example dataset in the "examples" directory for you to test adding your own data to the docker image. Please see the [mapping local data directory](https://imagenomer.readthedocs.io/en/latest/mapping-local-data-directory.html) for more information.
+We have provided a second example dataset in the "examples" directory for you to test adding your own data to the docker image. Please see this [section of the docs](https://imagenomer.readthedocs.io/en/latest/#adding-your-own-data-to-docker-image) for more information.
 
 Your local cohort should now show up in the ImageNomer browser-based GUI, asuming you have created a "demographics.pkl" file in the cohort directory, along with <a href='https://github.com/brainspaces/power264'>Power264-template</a> FC in an fc subdirectory of the cohort directory.
 
