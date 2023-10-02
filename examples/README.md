@@ -16,7 +16,7 @@ docker -run -p 8008:8008 \
     ghcr.io/aorliche/image-nomer:latest
 ```
 
-Once the container is running, you can navigate to http://localhost:8008/ to see your data.
+Once the container is running, you can navigate to http://localhost:8008/ and refresh the page to see your data.
 
 It should be visible under the cohorts dropdown, which may originally be set to Fibromyalgia.
 
