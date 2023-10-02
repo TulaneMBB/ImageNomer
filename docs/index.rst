@@ -19,7 +19,7 @@ This demo contains a single Fibromyalgia dataset from OpenNeuro.org, the same as
 
 Once you have loaded ImageNomer, you can check out the :ref:`Fibromyalgia-Tutorial`. 
 
-**Note: The beta version of ImageNomer retains state for the duration of the session.** 
+**Note: The ImageNomer live demo retains state for the duration of the session.** 
 
 This includes generated correlation images, which may impact stability if many users access the web demo in a short amount of time.
 
@@ -43,19 +43,46 @@ Download and run the docker image
 
 We expose port 8008 of the container to be accessible from your web browser.
 
+**Note:** If you are using Apple Silicon, use the **image-nomer-arm64** image instead.
+
 In your browser, navigate to http://localhost:8008/
 
 Explore example data
 --------------------
 
-We have provided an fMRI study of fibromyalgia from OpenNeuro.org for you to explore.
+We have provided an fMRI study of Fibromyalgia from OpenNeuro.org for you to explore.
 
 Unfortunately, due to NIH data policy, we cannot provide access to the Philadelphia Neurodevelopmental Cohort (PNC) dataset or to BSNIP. Access may be obtained for research purposes through the database of Genotypes and Phenotypes (dbGaP). If you do have permission, we would be happy to work with you regarding functions such as, e.g. SNPs, that are not available in the Fibromyalgia dataset.
 
-Adding Your Own Data
-====================
+Adding Your Own Data to Docker Image
+====================================
 
-To add your own data, you will need to clone the GitHub repository and install the required Python dependencies.
+You can map a local directory containing your own data into the Docker image. This directory should contain a "demographics.pkl" file as well as an "fc" subdirectory.
+
+We have provided a second example `dataset ds004775 <https://openneuro.org/datasets/ds004775/versions/1.1.1>`_ from OpenNeuro.org to demonstrate mapping a local data directory into the Docker image.
+
+First, navigate to the "examples" directory of the ImageNomer GitHub repository in your browser. 
+
+Download and unzip the included zip file.
+
+To start the Docker image including the data you just unzipped, execute the following command:
+
+.. code-block:: bash
+
+    docker -run -p 8008:8008 \
+        -v /full/path/to/my/unzipped/cohort:/root/ImageNomer/data/MyCohort \
+        ghcr.io/aorliche/image-nomer:latest
+
+Navigate to http://localhost:8008/, or if you already there, refresh the page.
+
+The new cohort should be available under the dropdown menu.
+
+See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer format when starting with a csv file and BOLD timeseries.
+
+Run By Cloning GitHub Repository
+================================
+
+You may also add your own data by cloning the GitHub repository and installing the required Python dependencies.
 
 .. code-block:: bash
 
@@ -71,9 +98,7 @@ The repository already contains the Fibromyalgia dataset. To run ImageNomer, exe
 
 Then, navigate to http://localhost:8008 
 
-Data is stored in the "ImageNomer/data/anton/cohorts" directory. Each cohort has its own subdirectory. Currently, the only user is "anton". See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer when starting with a csv file and BOLD timeseries.
-
-An additional description of the dataset layout in ImageNomer is coming soon.
+Data is stored in the "ImageNomer/data" directory. Each cohort has its own subdirectory. See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer format when starting with a csv file and BOLD timeseries.
 
 Changing the Code
 =================
