@@ -294,7 +294,8 @@ def corr_snps():
             snps.append(snp)
     snps = np.stack(snps)
     # Get correlation and p-value
-    cat = 'M' if field == 'sex' else None
+    #cat = 'M' if field == 'sex' else None
+    cat = args['cat'] if 'cat' in args else None
     rho, p = correlation.corr_feat(snps, pheno, cat=cat)
     # Get distribution image
     # Display p-value as alternate axes on distribution image

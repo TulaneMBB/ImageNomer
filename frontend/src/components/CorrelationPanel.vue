@@ -183,7 +183,8 @@ export default {
         },
         getCorrSNPs() {
             const hap = this.hap[0];
-            this.url = `/analysis/corr/snps?cohort=${this.store.cohort}&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10&hap=${enc(hap)}&labtype=${enc(this.labtype)}`;
+            const cat = this.featIsCat ? `&cat=${enc(this.cat)}` : '';
+            this.url = `/analysis/corr/snps?cohort=${this.store.cohort}&query=${enc(this.group)}&field=${enc(this.feat)}&set=${enc(this.set)}&n=10&hap=${enc(hap)}&labtype=${enc(this.labtype)}${cat}`;
             fetch(this.url)
             .then(resp => resp.json())
             .then(json => {
