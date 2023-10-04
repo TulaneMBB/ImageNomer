@@ -85,7 +85,7 @@ The new cohort should be available under the dropdown menu.
 
 See the `ImageNomer26FibromyalgiaDataset.ipynb <https://github.com/TulaneMBB/ImageNomer/tree/main/notebooks>`_ notebook file for an example of how to import data into ImageNomer format when starting with a csv file and BOLD timeseries.
 
-Also see the `Punish2FC_ExampleImNomer.ipynb <https://github.com/TulaneMBB/ImageNomer/blob/main/notebooks/Punish2FC_ExampleImNomer.ipynb>`_ notebook file for an example of a smaller dataset.
+Also see the `Punish2FC_ExampleImNomer.ipynb <https://github.com/TulaneMBB/ImageNomer/blob/main/notebooks/Punish2FC_ExampleImNomer.ipynb>`_ notebook file for an example of a smaller dataset. The "Punish1SPM.ipynb" notebook file in the same directory will show how to use nipype/SPM to create an ImageNomer dataset from 4D fMRI images.
 
 Run By Cloning GitHub Repository
 ================================
