@@ -3,6 +3,45 @@ import numpy as np
 import scipy.stats as stats
 
 '''
+Get correlation between two one-dimensional variables
+Can be either Pearson's r or Spearman's r
+Do this instead of np.corrcoef to get stats and eliminate nans
+'''
+def corr_vars(a, b, typ='Pearson'):
+    if isinstance(a, list):
+        a = np.stack(a)
+    if isinstance(b, list):
+        b = np.stack(b)
+    # Eliminate all nan values
+    agood = np.invert(np.isnan(a))
+    bgood = np.invert(np.isnan(b))
+    a = a[agood*bgood]
+    b = b[agood*bgood]
+    mu_a = np.mean(a, axis=0, keepdims=True)
+    mu_b = np.mean(b, axis=0, keepdims=True)
+    a = a - mu_a
+    b = b - mu_b
+    if typ == 'Spearman':
+       # Convert to ranks
+       a = np.argsort(a)
+       b = np.argsort(b)
+    # Calculate correlation
+    sigma_ab = np.einsum('a,a->',a,b)
+    sigma_aa = np.einsum('a,a->',a,a)
+    sigma_bb = np.einsum('a,a->',b,b)
+    rho = sigma_ab/(sigma_aa*sigma_bb)**0.5
+    # Get t value and p value
+    df = len(a)-2
+    t = rho*(df/(1-rho**2))**0.5
+    if t < 0:
+        t = -t
+    # Convert to 2-sided p value
+    p = (1-stats.t.cdf(t, df))*2
+    if p < 1e-20:
+        p = 1e-20
+    return rho, np.log10(p), df
+
+'''
 Get feature correlations, either Pearson's r or Spearman's r
 And associated p values
 P values assumes normality of input features
@@ -41,10 +80,7 @@ def corr_feat(feats, var, cat=None, typ='Pearson', bonf=True):
         p *= m
     p[p > 1] = 1
     p[p < 1e-5] = 1e-5
-    return rho, np.log10(p)
-
-def corr_var(var1, var2):
-    return np.corrcoef(var1, var2)[0,1]
+    return rho, np.log10(p), df
 
 def corr_decomp_pheno(ws, pheno, n):
     ws = np.stack(ws)

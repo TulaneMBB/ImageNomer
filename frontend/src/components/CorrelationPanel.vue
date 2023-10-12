@@ -18,6 +18,9 @@
                     Save P-Value Image
                 </v-btn>
             </div>
+            <div v-else-if='corrVal' class='text-body-2 ml-4'>
+                Correlation: {{ corrVal }}, n: {{ n }} p-value: {{ pVal }}, log10(p-value): {{ log10pVal }}
+            </div>
         </div>
         <v-row align='center' class='pa-4 pt-3 pb-3 ma-0'>
            <v-select 
@@ -123,6 +126,10 @@ export default {
             hap: "0:Minor",
             labtype: "index",
             cat: null,
+            corrVal: null,
+            n: null,
+            pVal: null,
+            log10pVal: null
         };
     },
     setup() {
@@ -177,6 +184,10 @@ export default {
                     this.imageData = json.data;
                     this.pImageData = null;
                     this.isCorr = false;
+                    this.corrVal = json.corr;
+                    this.n = json.n;
+                    this.pVal = json.p;
+                    this.log10pVal = json.log10p;
                 }
             })
             .catch(err => this.error = err);

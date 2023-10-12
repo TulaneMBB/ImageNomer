@@ -151,6 +151,9 @@ def corr_demo():
     # Both categorical
     a = subset[field1].tolist()
     b = subset[field2].tolist()
+    c = None
+    df = None
+    log10p = None
     if isinstance(a[0], str) and isinstance(b[0], str):
         aset = natsorted(list(set(a)))
         bset = natsorted(list(set(b)))
@@ -170,9 +173,13 @@ def corr_demo():
         b = b.to_numpy()
         b = b[np.invert(np.isnan(b))] 
         img = image.violin([a,b], [cat, 'Other'], field2)
+        a = list(subset[field1] == cat)
+        b = list(subset[field2])
+        c, log10p, df = correlation.corr_vars(a, b)
     else:
         img = image.scatter(subset[field1], subset[field2], field1, field2)
-    return jsonify({'data': img})
+        c, log10p, df = correlation.corr_vars(list(subset[field1]), list(subset[field2]))
+    return jsonify({'data': img, 'corr': c, 'n': df, 'p': 10**log10p, 'log10p': log10p})
 
 '''Correlation of demographic feature with FC'''
 @app.route('/analysis/corr/fc', methods=(['GET']))
@@ -204,10 +211,16 @@ def corr_fc():
     # Get fcs and pheno
     fcs = []
     pheno = []
+    # Get map from index to row number
+    # So we can use iloc instead of loc later
+    rowmap = dict()
+    colmap = df.columns.get_loc(field)
+    for sub in group:
+        rowmap[sub] = df.index.get_loc(sub)
     for task in tasks:
         for sub in group:
             if data.has_fc(coh, sub, task, ses, typ=typ):
-                p = df.loc[sub][field]
+                p = df.iloc[rowmap[sub], colmap]
                 if cat is not None:
                     p = p == cat
                 # pandas will fill in data fields that don't exist for an FC with nan?
@@ -219,8 +232,7 @@ def corr_fc():
                 fcs.append(fc)
     fcs = np.stack(fcs)
     # Get correlation and p-value
-    #cat = 'M' if field == 'sex' else None
-    rho, p = correlation.corr_feat(fcs, pheno, cat=None)
+    rho, p, df = correlation.corr_feat(fcs, pheno, cat=None)
     rho = data.vec2mat(rho, fillones=False)
     p = data.vec2mat(p, fillones=False)
     # Apply threshold
@@ -296,7 +308,7 @@ def corr_snps():
     # Get correlation and p-value
     #cat = 'M' if field == 'sex' else None
     cat = args['cat'] if 'cat' in args else None
-    rho, p = correlation.corr_feat(snps, pheno, cat=cat)
+    rho, p, df = correlation.corr_feat(snps, pheno, cat=cat)
     # Get distribution image
     # Display p-value as alternate axes on distribution image
     idcs = np.argsort(rho)
