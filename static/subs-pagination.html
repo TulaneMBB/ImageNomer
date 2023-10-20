@@ -1,0 +1,9 @@
+{% if has_prev %}
+    <li class="page-item"><a class="page-link" href="#" aria-label="Previous">&laquo;</a></li>
+{% endif %}
+{% for page in view_pages %}
+    <li class="page-item"><a class="page-link" href="#">{{ page }}</a></li>
+{% endfor %}
+{% if has_next %}
+    <li class="page-item"><a class="page-link" href="#" aria-label="Next">&raquo;</a></li>
+{% endif %}

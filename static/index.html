@@ -7,7 +7,21 @@
     <link rel='stylesheet' href='/static/css/imnomer.css'>
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script src='/static/js/htmx.min.js'></script>
-    <!--<script src='/static/js/sse.js'></script>-->
+    <script>
+window.addEventListener('load', function() {
+    $ = q => document.querySelector(q);
+    $$ = q => [...document.querySelectorAll(q)];
+    $$('[data-no-submit]').forEach(e => {
+        console.log('okay');
+        window.addEventListener('keydown', event => {
+            if(event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    });
+});
+    </script>
     <link rel="icon" href='/static/images/favicon.png'>
     <title>ImageNomer</title>
 </head>
@@ -32,7 +46,10 @@
                     <div class='form-text'>
                         66 subjects (<span id='num-subs-selected'>2</span> selected)
                     </div>
-                    <ul class='list-group'>
+                    <form data-no-submit>
+                        <input type='text' class='form-control' placeholder='Filter Subjects' id='filter-text' name='filter-text' hx-trigger='change' hx-post='/filter-subjects' hx-swap='none'>
+                    </form>
+                    <ul class='list-group' id='subs-list' hx-sse='swap:SubsList'>
                         <li class='list-group-item'>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="subj1">
@@ -58,21 +75,7 @@
                             </div>
                         </li>
                     </ul>
-                    <ul class="pagination justify-content-center" id='subs-pagination' hx-sse='swap:SubsPagination'>
-                        <li class="page-item">
-                            <a class="page-link" href="#" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    </ul>
+                    <ul class="pagination justify-content-center" id='subs-pagination' hx-sse='swap:SubsPagination'></ul>
                 </div>
                 <div id='groups'>
                     <h6>Groups</h6>
@@ -83,12 +86,14 @@
                         <input type='text' class='form-control' placeholder='Group Query' id='group-text' name='group-text'>
                         <button type='button' class='btn btn-primary' id='group-create-btn' hx-post='/create-group' hx-swap='none'>Create</button>
                     </form>
-                    <ul class='list-group' id='groups-list' hx-sse='swap:GroupsList'>
-                    </ul>
+                    <ul class='list-group' id='groups-list' hx-sse='swap:GroupsList'></ul>
                 </div>
             </div>
             <div id="right" class='col'>
                 <ul class='nav'>
+                    <li class='nav-item'>
+                        <a class='nav-link' href='#'>Overview</a>
+                    </li>
                     <li class='nav-item'>
                         <a class='nav-link' href='#'>Phenotypes</a>
                     </li>
