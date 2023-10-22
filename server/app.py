@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template, send_file, Response
 import threading
+from collections import defaultdict
 
 app = Flask(__name__,
     template_folder='../static',
@@ -22,18 +23,22 @@ groups = [dict(name='All', sel=False)]
 
 # Subjects and subject pagination
 n_subs_per_page = 8
-subs = list(range(1, 100))
+subs = [str(s) for s in list(range(1, 100))]
 filtered_subs = subs
 subs_page = 1
+subs_checked = defaultdict(bool)
 
 # For server-sent events
 cv = threading.Condition()
 
 to_update = dict(GroupsList=True, SubsPagination=True, SubsList=True)
+client_idx = 0
 
 # Home screen
 @app.route('/')
 def index():
+    global client_idx
+    client_idx += 1
     for k in to_update:
         to_update[k] = True
     return render_template('index.html')
@@ -61,15 +66,26 @@ def get_component(comp):
         if comp == 'SubsList':
             st = (subs_page-1) * n_subs_per_page
             end = st + n_subs_per_page
-            html = render_template('subs-list.html', subs=filtered_subs[st:end])
+            checked = []
+            print(filtered_subs)
+            for i in range(st, end):
+                sub = filtered_subs[i]
+                checked.append(subs_checked[sub])
+            print(checked)
+            print(subs_checked)
+            # Range is for sub indices
+            html = render_template('subs-list.html', subs=zip(range(st, end), filtered_subs[st:end], checked))
             return html
 
 # Server-sent events
 @app.route('/sse')
 def sse():
+    my_client_idx = client_idx
     def event_stream():
         while True:
             with cv:
+                if my_client_idx != client_idx:
+                    return
                 for comp, upd in to_update.items():
                     if upd:
                         to_update[comp] = False
@@ -91,7 +107,7 @@ def create_group():
     groups.append(dict(name=args['group-text'], sel=False))
     to_update['GroupsList'] = True
     with cv:
-        cv.notify()
+        cv.notify_all()
     return ('', 204)
 
 # Filter subjects
@@ -102,7 +118,7 @@ def filter_subjects():
     if err is not None:
         print(err)
         return jsonify(err)
-    global filtered_subs
+    global filtered_subs, subs_page
     pattern = args['filter-text']
     filtered_subs = [s for s in subs if pattern in str(s)]
     if len(filtered_subs) < (subs_page-1) * n_subs_per_page + 1:
@@ -110,7 +126,43 @@ def filter_subjects():
     to_update['SubsPagination'] = True
     to_update['SubsList'] = True
     with cv:
-        cv.notify()
+        cv.notify_all()
+    return ('', 204)
+
+# Change subjects page
+@app.route('/subjects-page', methods=['POST'])
+def change_subjects_page():
+    args = request.form
+    err = validate_args(['page'], args, '/subjects-page')
+    if err is not None:
+        print(err)
+        return jsonify(err)
+    global filtered_subs, subs_page
+    p = args['page']
+    if p == 'First':
+        subs_page = 1
+    elif p == 'Last':
+        subs_page = (len(filtered_subs)+1) // n_subs_per_page + 1
+    else:
+        subs_page = int(p)
+    to_update['SubsPagination'] = True
+    to_update['SubsList'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Subject checked or unchecked
+@app.route('/subject-checked', methods=['POST'])
+def change_subject_checked():
+    args = request.form
+    err = validate_args(['subid'], args, '/subject-checked')
+    if err is not None:
+        print(err)
+        return jsonify(err)
+    global subs_checked
+    subid = args['subid']
+    subs_checked[subid] = False if subs_checked[subid] else True
+    print(subs_checked)
     return ('', 204)
 
 if __name__ == '__main__':
