@@ -3,3 +3,4 @@ data/anton/cohorts/*
 !data/anton/cohorts/Fibromyalgia
 .git.bak
 notebooks/**/.*
+*.pyc
