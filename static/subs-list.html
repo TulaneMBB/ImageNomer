@@ -9,9 +9,7 @@
                 <input class="form-check-input" type="checkbox" id="subj{{ i }}" hx-post='/subject-checked' hx-swap='none' {{ "checked" if sel }}>
                 <input type='hidden' name='subid' value='{{ sub }}'>
             </form>
-            <label class="form-check-label" for="subj{{ i }}">
-                <a href='#'>{{ sub }}</a>
-            </label>
+            <label class="form-check-label" for="subj{{ i }}">{{ sub }}</label>
         </div>
     </li>
     {% endfor %}

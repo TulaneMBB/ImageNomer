@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, send_file, Response
 import threading
 from collections import defaultdict
 from natsort import natsorted
+import numbers
 
 # Our modules
 import cohort
@@ -20,8 +21,8 @@ def validate_args(keywords, args, url):
             return error(f'{kw} not in args ({url})')
     return None
 
-# Which content view is active (Phenotypes, Connectivity, etc.)
-content = None              
+# Overview content pane
+overview_html = None
 
 # Cohorts
 cohorts = []
@@ -41,7 +42,7 @@ subs_checked = defaultdict(bool)
 # For server-sent events
 cv = threading.Condition()
 
-to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, SubsList=True)
+to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, SubsList=True, Overview=False)
 client_idx = 0
 
 # Home screen
@@ -93,6 +94,9 @@ def get_component(comp):
         if comp == 'Cohorts':
             html = render_template('cohorts.html', cohorts=cohorts)
             return html
+        if comp == 'Overview':
+            global overview_html
+            return overview_html
 
 # Server-sent events
 @app.route('/sse')
@@ -204,6 +208,47 @@ def change_cohort():
     to_update['SubsList'] = True
     with cv:
         cv.notify_all()
+    return ('', 204)
+
+def decim(v):
+    return "{:.2f}".format(v)
+
+# Overview pane
+@app.route('/overview', methods=['POST'])
+def overview_pane():
+    if sel_cohort is None:
+        return ('', 204)
+    global overview_html
+    if overview_html is None:
+        demo = sel_cohort['demo']
+        # Get stats
+        stats = []
+        for col, vals in demo.items():
+            sub, val = vals.popitem()
+            # Replace after popitem
+            vals[sub] = val
+            d = dict(name=col, size=len(vals))
+            if isinstance(val, numbers.Number):
+                d['numeric'] = True
+                d['min'] = min(vals.values())
+                d['max'] = max(vals.values())
+                d['mean'] = decim(sum(vals.values())/len(vals))
+            else:
+                counts = dict()
+                for v in vals.values():
+                    if v not in counts:
+                        counts[v] = 1
+                    else:
+                        counts[v] += 1
+                counts = [(c,v) for v,c in counts.items()]
+                counts.sort(key=lambda x: x[0], reverse=True)
+                d['counts'] = counts
+                d['numeric'] = False
+            stats.append(d)
+        overview_html = render_template('overview.html', stats=stats)
+        to_update['Overview'] = True
+        with cv:
+            cv.notify_all()
     return ('', 204)
 
 if __name__ == '__main__':

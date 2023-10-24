@@ -16,3 +16,11 @@
     margin-top: 5px;
     margin-left: 10px;
 }
+
+#overview, #phenotypes {
+    display: none;
+}
+
+#overview:target, #phenotypes:target {
+    display: block;
+}

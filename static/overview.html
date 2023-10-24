@@ -1,0 +1,30 @@
+<h6>Categorical Fields</h6>
+<table>
+<tr><th>Name</th><th>Values</th></tr>
+{% for field in stats %}
+    {% if not field.numeric %}
+    <tr>
+    <td>{{ field.name }}</td>
+    <td>
+    {% for c,v in field.counts %}
+    {{ v }} ({{ c }})
+    {% endfor %}
+    {% endif %}
+{% endfor %}
+</table>
+<hr>
+<h6>Numeric Fields</h6>
+<table>
+<tr><th>Name</th><th>Min</th><th>Max</th><th>Mean</th><th>N</th></tr>
+{% for field in stats %}
+    {% if field.numeric %}
+    <tr>
+    <td>{{ field.name }}</td>
+    <td>{{ field.min }}</td>
+    <td>{{ field.max }}</td>
+    <td>{{ field.mean }}</td>
+    <td>{{ field.size }}</td>
+    </tr>
+    {% endif %}
+{% endfor %}
+</table>
