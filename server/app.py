@@ -34,6 +34,7 @@ pheno_field = None
 
 # Cohorts
 cohorts = []
+sel_cohort_name = None
 sel_cohort = None
 sel_cohort_df = None
 
@@ -100,15 +101,20 @@ def get_component(comp):
             html = render_template('subs-list.html', subs=zip(range(st, end), filtered_subs[st:end], checked), nsubs=len(subs), nsel=nsel)
             return html
         if comp == 'Cohorts':
-            html = render_template('cohorts.html', cohorts=cohorts)
+            global sel_cohort_name, cohorts
+            html = render_template('cohorts.html', cohorts=cohorts, sel_cohort=sel_cohort_name)
+            print(html)
             return html
         if comp == 'Overview':
             global overview_html
-            return overview_html
+            if overview_html is None:
+                return '<div></div>'
+            else:
+                return overview_html
         if comp == 'Phenotypes':
-            global pheno_img, pheno_field
+            global sel_cohort_df, pheno_img, pheno_field
             have_img = pheno_img is not None
-            fields = sel_cohort_df.columns
+            fields = sel_cohort_df.columns if sel_cohort_df is not None else []
             html = render_template('phenotypes.html', data=pheno_img, have_img=have_img, fields=fields, sel_field=pheno_field)
             return html
             
@@ -213,13 +219,17 @@ def change_cohort():
     coh = args['cohort']
     if coh == '':
         return ('', 204)
-    global sel_cohort_name, sel_cohort, sel_cohort_df, subs, filtered_subs
+    global sel_cohort_name, sel_cohort, sel_cohort_df, subs, filtered_subs, overview_html
+    sel_cohort_name = coh
     sel_cohort = cohort.get_cohort(coh)
     sel_cohort_df = data.demo2df(sel_cohort['demo'])
     subs = natsorted(list(sel_cohort_df.index))
     filtered_subs = subs
-    to_update['SubsPagination'] = True
-    to_update['SubsList'] = True
+    overview_html = None
+    if content == 'Overview':
+        overview_panel()
+    for comp in to_update:
+        to_update[comp] = True
     with cv:
         cv.notify_all()
     return ('', 204)
@@ -229,7 +239,7 @@ def decim(v):
 
 # Overview pane
 @app.route('/overview', methods=['POST'])
-def overview_pane():
+def overview_panel():
     if sel_cohort is None:
         return ('', 204)
     global overview_html, content
@@ -239,14 +249,16 @@ def overview_pane():
         # Get stats
         stats = []
         for col, vals in demo.items():
+            if len(vals) == 0:
+                continue
             sub, val = vals.popitem()
             # Replace after popitem
             vals[sub] = val
             d = dict(name=col, size=len(vals))
             if isinstance(val, numbers.Number):
                 d['numeric'] = True
-                d['min'] = min(vals.values())
-                d['max'] = max(vals.values())
+                d['min'] = decim(min(vals.values()))
+                d['max'] = decim(max(vals.values()))
                 d['mean'] = decim(sum(vals.values())/len(vals))
             else:
                 counts = dict()
