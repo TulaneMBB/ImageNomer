@@ -1,0 +1,16 @@
+<div class='d-flex'>
+    <label for='field' id='field-label'>View phenotypes for groups</label>
+    <form data-no-submit>
+        <select name='field' id='field' class='form-select' hx-post='/phenotypes-field' hx-trigger='change' hx-swap='none'>
+        <option value="" {{ "selected" if sel_field is none }} disabled>Select Field</option>
+        {% for field in fields %}
+        <option value="{{ field }}" {{ "selected" if sel_field == field }}>{{ field }}</option>
+        {% endfor %}
+        </select>
+    </form>
+</div>
+{% if have_img %}
+<img src='data:image/png;base64,{{ data }}'>
+{% else %}
+<div>No groups selected</div>
+{% endif %}

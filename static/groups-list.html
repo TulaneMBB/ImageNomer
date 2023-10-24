@@ -1,7 +1,10 @@
 {% for i, group in groups %}
 <li class='list-group-item'>
     <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="group{{ i }}" {{ "checked" if group.sel }}>
+        <form data-no-submit>
+            <input class="form-check-input" type="checkbox" id="group{{ i }}" hx-post='/group-checked' hx-trigger='change' hx-swap='none' {{ "checked" if group.sel }}>
+            <input name='group' type='hidden' value='{{ i }}'>
+        </form>
         <label class="form-check-label" for="group{{ i }}">{{ group.name }}</label>
     </div>
 </li>

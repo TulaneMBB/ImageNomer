@@ -30,7 +30,7 @@ window.addEventListener('load', function() {
         <div id="header" class='row'>
             <h2>ImageNomer</h2>
             <div class='d-flex'>
-                <label for="dataset" class='align-middle' id='dataset-label'>Dataset</label>
+                <label for="dataset" id='dataset-label'>Dataset</label>
                 <form data-no-submit hx-sse='swap:Cohorts'></form>
                 <a class='header-link' href='https://imagenomer.readthedocs.io/en/latest/'>Documentation</a>
                 <a class='header-link' href='https://github.com/TulaneMBB/ImageNomer/'>GitHub</a>
@@ -65,7 +65,7 @@ window.addEventListener('load', function() {
                         <a class='nav-link' href='#overview' hx-post='/overview' hx-swap='none'>Overview</a>
                     </li>
                     <li class='nav-item'>
-                        <a class='nav-link' href='#phenotypes'>Phenotypes</a>
+                        <a class='nav-link' href='#phenotypes' hx-post='/phenotypes' hx-swap='none'>Phenotypes</a>
                     </li>
                     <li class='nav-item'>
                         <a class="nav-link" href='#'>Connectivity</a>
@@ -86,8 +86,8 @@ window.addEventListener('load', function() {
                         <a class='nav-link' href='#'>Image Math</a>
                     </li>
                 </ul>
-                <div id='overview' hx-sse='swap:Overview'>Hello</div>
-                <div id='phenotypes'>There</div>
+                <section id='overview' hx-sse='swap:Overview'></section>
+                <section id='phenotypes' hx-sse='swap:Phenotypes'></section>
             </div>
         </div>
     </div>

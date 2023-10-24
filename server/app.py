@@ -7,6 +7,7 @@ import numbers
 # Our modules
 import cohort
 import data
+import image
 
 app = Flask(__name__,
     template_folder='../static',
@@ -21,8 +22,15 @@ def validate_args(keywords, args, url):
             return error(f'{kw} not in args ({url})')
     return None
 
+# Content pane visible
+content = None
+
 # Overview content pane
 overview_html = None
+
+# Phenotype content pane
+pheno_img = None
+pheno_field = None
 
 # Cohorts
 cohorts = []
@@ -42,7 +50,7 @@ subs_checked = defaultdict(bool)
 # For server-sent events
 cv = threading.Condition()
 
-to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, SubsList=True, Overview=False)
+to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, SubsList=True, Overview=False, Phenotypes=False)
 client_idx = 0
 
 # Home screen
@@ -97,7 +105,13 @@ def get_component(comp):
         if comp == 'Overview':
             global overview_html
             return overview_html
-
+        if comp == 'Phenotypes':
+            global pheno_img, pheno_field
+            have_img = pheno_img is not None
+            fields = sel_cohort_df.columns
+            html = render_template('phenotypes.html', data=pheno_img, have_img=have_img, fields=fields, sel_field=pheno_field)
+            return html
+            
 # Server-sent events
 @app.route('/sse')
 def sse():
@@ -218,7 +232,8 @@ def decim(v):
 def overview_pane():
     if sel_cohort is None:
         return ('', 204)
-    global overview_html
+    global overview_html, content
+    content = 'Overview'
     if overview_html is None:
         demo = sel_cohort['demo']
         # Get stats
@@ -250,6 +265,91 @@ def overview_pane():
         with cv:
             cv.notify_all()
     return ('', 204)
+
+# Group checked
+@app.route('/group-checked', methods=['POST'])
+def change_group_checked():
+    args = request.form
+    err = validate_args(['group'], args, '/group-checked')
+    if err is not None:
+        print(err)
+        return ('', 204)
+    global groups, content
+    idx = int(args['group'])
+    groups[idx]['sel'] = not groups[idx]['sel']
+    to_update['Phenotypes'] = True
+    if content == 'Phenotypes':
+        get_phenotypes()
+    return ('', 204)
+
+# Phenotypes panel
+@app.route('/phenotypes', methods=['POST'])
+def get_phenotypes():
+    global sel_cohort_df, groups, pheno_img, content, pheno_field
+    if sel_cohort_df is None:
+        pheno_img = None
+        return ('', 204)
+    if pheno_field is None:
+        pheno_img = None
+        return ('', 204)
+    queries = [g['name'] for g in groups if g['sel']]
+    grps = dict()
+    for query in queries:
+        if query == 'All':
+            grps['All'] = subs
+            continue
+        try:
+            g = [str(i) for i in list(sel_cohort_df.query(query).index)]
+            if len(g) > 0:
+                grps[query] = g
+        except:
+            print(f'Bad group {query}')
+    if len(grps) == 0:
+        pheno_img = None
+    else:
+        pheno_img = image.groups_hist(sel_cohort_df, grps, pheno_field)
+    content = 'Phenotypes'
+    to_update['Phenotypes'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Phenotypes panel field
+@app.route('/phenotypes-field', methods=['POST'])
+def change_phenotypes_field():
+    args = request.form
+    err = validate_args(['field'], args, '/phenotypes-field')
+    if err is not None:
+        print(err)
+        return ('', 204)
+    global pheno_field
+    field = args['field']
+    if field == '':
+        return ('', 204)
+    pheno_field = field
+    get_phenotypes()
+    return ('', 204)
+
+'''
+
+@app.route('/data/demo/hist', methods=(['GET', 'POST']))
+def demo_hist():
+    if request.method == 'GET':
+        args = request.args
+    else:
+        args = request.form
+    args_err = validate_args(['cohort', 'groups', 'field'], 
+        args, request.url)
+    if args_err:
+        return args_err
+    cohort = args['cohort']
+    field = args['field']
+    groups = json.loads(args['groups'])
+    demo = data.get_demo(cohort)
+    df = data.demo2df(demo)
+    img = image.groups_hist(df, groups, field)
+    return jsonify({'data': img})
+'''
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8008, debug=True, threaded=True)
