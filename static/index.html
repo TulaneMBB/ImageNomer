@@ -31,9 +31,7 @@ window.addEventListener('load', function() {
             <h2>ImageNomer</h2>
             <div class='d-flex'>
                 <label for="dataset" class='align-middle' id='dataset-label'>Dataset</label>
-                <select id="dataset" class='form-select' style='width: 200px'>
-                    <option>Fibromyalgia</option>
-                </select>
+                <form data-no-submit hx-sse='swap:Cohorts'></form>
                 <a class='header-link' href='https://imagenomer.readthedocs.io/en/latest/'>Documentation</a>
                 <a class='header-link' href='https://github.com/TulaneMBB/ImageNomer/'>GitHub</a>
                 <a class='header-link' href='https://github.com/TulaneMBB/ImageNomer/issues'>Issues</a>
@@ -43,13 +41,10 @@ window.addEventListener('load', function() {
             <div id="left" class='col-3'>
                 <div id='subjects'>
                     <h6>Subjects</h6>
-                    <div class='form-text'>
-                        66 subjects (<span id='num-subs-selected'>2</span> selected)
-                    </div>
                     <form data-no-submit>
                         <input type='text' class='form-control' placeholder='Filter Subjects' id='filter-text' name='filter-text' hx-trigger='input' hx-post='/filter-subjects' hx-swap='none'>
                     </form>
-                    <ul class='list-group' id='subs-list' hx-sse='swap:SubsList'></ul>
+                    <div hx-sse='swap:SubsList'></div>
                     <ul class="pagination justify-content-center" id='subs-pagination' hx-sse='swap:SubsPagination'></ul>
                 </div>
                 <div id='groups'>

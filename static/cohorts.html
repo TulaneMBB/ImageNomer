@@ -1,0 +1,6 @@
+<select id="dataset" class='form-select' style='width: 200px' name='cohort' hx-post="/cohort" hx-swap='none' hx-trigger='change'>
+    <option value="" selected disabled>Select Cohort</option>
+    {% for cohort in cohorts %}
+    <option value="{{ cohort }}">{{ cohort }}</option>
+    {% endfor %}
+</select>

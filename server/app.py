@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify, render_template, send_file, Response
 import threading
 from collections import defaultdict
+from natsort import natsorted
+
+# Our modules
+import cohort
+import data
 
 app = Flask(__name__,
     template_folder='../static',
@@ -18,12 +23,17 @@ def validate_args(keywords, args, url):
 # Which content view is active (Phenotypes, Connectivity, etc.)
 content = None              
 
+# Cohorts
+cohorts = []
+sel_cohort = None
+sel_cohort_df = None
+
 # List of groups, their id, and whether they are checked
 groups = [dict(name='All', sel=False)]
 
 # Subjects and subject pagination
 n_subs_per_page = 8
-subs = [str(s) for s in list(range(1, 100))]
+subs = []
 filtered_subs = subs
 subs_page = 1
 subs_checked = defaultdict(bool)
@@ -31,14 +41,15 @@ subs_checked = defaultdict(bool)
 # For server-sent events
 cv = threading.Condition()
 
-to_update = dict(GroupsList=True, SubsPagination=True, SubsList=True)
+to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, SubsList=True)
 client_idx = 0
 
 # Home screen
 @app.route('/')
 def index():
-    global client_idx
+    global client_idx, cohorts
     client_idx += 1
+    cohorts = cohort.ls_cohorts()
     for k in to_update:
         to_update[k] = True
     return render_template('index.html')
@@ -67,14 +78,20 @@ def get_component(comp):
             st = (subs_page-1) * n_subs_per_page
             end = st + n_subs_per_page
             checked = []
-            print(filtered_subs)
             for i in range(st, end):
+                if i >= len(filtered_subs):
+                    break
                 sub = filtered_subs[i]
                 checked.append(subs_checked[sub])
-            print(checked)
-            print(subs_checked)
+            nsel = 0
+            for v in subs_checked.values():
+                if v:
+                    nsel += 1
             # Range is for sub indices
-            html = render_template('subs-list.html', subs=zip(range(st, end), filtered_subs[st:end], checked))
+            html = render_template('subs-list.html', subs=zip(range(st, end), filtered_subs[st:end], checked), nsubs=len(subs), nsel=nsel)
+            return html
+        if comp == 'Cohorts':
+            html = render_template('cohorts.html', cohorts=cohorts)
             return html
 
 # Server-sent events
@@ -162,7 +179,31 @@ def change_subject_checked():
     global subs_checked
     subid = args['subid']
     subs_checked[subid] = False if subs_checked[subid] else True
-    print(subs_checked)
+    to_update['SubsList'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Cohort changed
+@app.route('/cohort', methods=['POST'])
+def change_cohort():
+    args = request.form
+    err = validate_args(['cohort'], args, '/cohort')
+    if err is not None:
+        print(err)
+        return ('', 204)
+    coh = args['cohort']
+    if coh == '':
+        return ('', 204)
+    global sel_cohort_name, sel_cohort, sel_cohort_df, subs, filtered_subs
+    sel_cohort = cohort.get_cohort(coh)
+    sel_cohort_df = data.demo2df(sel_cohort['demo'])
+    subs = natsorted(list(sel_cohort_df.index))
+    filtered_subs = subs
+    to_update['SubsPagination'] = True
+    to_update['SubsList'] = True
+    with cv:
+        cv.notify_all()
     return ('', 204)
 
 if __name__ == '__main__':
