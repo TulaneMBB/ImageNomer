@@ -89,7 +89,7 @@ def get_cohort(cohort):
     components = p/'decomp'
     dat = dict(name=cohort)
     if fc.is_dir():
-        dat['fc'] = [f.name for f in fc.iterdir() if not f.is_dir()]
+        dat['conn'] = [f.name for f in fc.iterdir() if not f.is_dir()]
     if demo.exists():
         dat['demo'] = data.get_demo(cohort)
     if weights.is_dir():

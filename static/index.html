@@ -77,7 +77,7 @@ window.addEventListener('load', function() {
                         <a class='nav-link' href='#'>Decomposition</a>
                     </li>
                     <li class='nav-item'>
-                        <a class='nav-link' href='#'>Correlation</a>
+                        <a class='nav-link' href='#correlation' hx-post='/correlation' hx-swap='none'>Correlation</a>
                     </li>
                     <li class='nav-item'>
                         <a class='nav-link' href='#'>Weights</a>
@@ -88,6 +88,7 @@ window.addEventListener('load', function() {
                 </ul>
                 <section id='overview' hx-sse='swap:Overview'></section>
                 <section id='phenotypes' hx-sse='swap:Phenotypes'></section>
+                <section id='correlation' hx-sse='swap:Correlation'></section>
             </div>
         </div>
     </div>

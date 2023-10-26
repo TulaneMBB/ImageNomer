@@ -8,6 +8,7 @@ import numbers
 import cohort
 import data
 import image
+import correlation
 
 app = Flask(__name__,
     template_folder='../static',
@@ -32,6 +33,13 @@ overview_html = None
 pheno_img = None
 pheno_field = None
 
+# Correlation content pane
+corr_group = None
+corr_img = None
+pval_img = None
+corr_pheno = None
+corr_cat = None
+
 # Cohorts
 cohorts = []
 sel_cohort_name = None
@@ -51,7 +59,9 @@ subs_checked = defaultdict(bool)
 # For server-sent events
 cv = threading.Condition()
 
-to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, SubsList=True, Overview=False, Phenotypes=False)
+to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, 
+                 SubsList=True, Overview=False, Phenotypes=False,
+                 Correlation=False)
 client_idx = 0
 
 # Home screen
@@ -103,7 +113,6 @@ def get_component(comp):
         if comp == 'Cohorts':
             global sel_cohort_name, cohorts
             html = render_template('cohorts.html', cohorts=cohorts, sel_cohort=sel_cohort_name)
-            print(html)
             return html
         if comp == 'Overview':
             global overview_html
@@ -116,6 +125,27 @@ def get_component(comp):
             have_img = pheno_img is not None
             fields = sel_cohort_df.columns if sel_cohort_df is not None else []
             html = render_template('phenotypes.html', data=pheno_img, have_img=have_img, fields=fields, sel_field=pheno_field)
+            return html
+        if comp == 'Correlation':
+            global corr_group, corr_img, pval_img, corr_pheno, corr_cat
+            grps = [g['name'] for g in groups]
+            phenos = []
+            cats = None
+            if sel_cohort_df is not None:
+                phenos = sel_cohort_df.columns
+                demo = sel_cohort['demo']
+                if corr_pheno in demo and len(demo[corr_pheno]) > 0:
+                    sub, val = demo[corr_pheno].popitem()
+                    # Put back
+                    demo[corr_pheno][sub] = val
+                    if not isinstance(val, numbers.Number):
+                        cats = set()
+                        for v in demo[corr_pheno].values():
+                            cats.add(v)
+                        cats = list(cats)
+                if cats is None:
+                    corr_cat = None
+            html = render_template('correlation.html', groups=grps, sel_group=corr_group, corr_img=corr_img, pval_img=pval_img, phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat)
             return html
             
 # Server-sent events
@@ -147,6 +177,7 @@ def create_group():
         return jsonify(err)
     groups.append(dict(name=args['group-text'], sel=False))
     to_update['GroupsList'] = True
+    to_update['Correlation'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
@@ -291,12 +322,12 @@ def change_group_checked():
     groups[idx]['sel'] = not groups[idx]['sel']
     to_update['Phenotypes'] = True
     if content == 'Phenotypes':
-        get_phenotypes()
+        phenotypes_panel()
     return ('', 204)
 
 # Phenotypes panel
 @app.route('/phenotypes', methods=['POST'])
-def get_phenotypes():
+def phenotypes_panel():
     global sel_cohort_df, groups, pheno_img, content, pheno_field
     if sel_cohort_df is None:
         pheno_img = None
@@ -339,7 +370,31 @@ def change_phenotypes_field():
     if field == '':
         return ('', 204)
     pheno_field = field
-    get_phenotypes()
+    phenotypes_panel()
+    return ('', 204)
+
+# Correlation panel
+@app.route('/correlation', methods=['POST'])
+def correlation_panel():
+    content = 'Correlation'
+    to_update['Correlation'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Select phenotype in correlation
+@app.route('/corr-select-pheno', methods=['POST'])
+def corr_select_pheno():
+    args = request.form
+    err = validate_args(['pheno'], args, '/corr-select-pheno')
+    if err is not None:
+        print(err)
+        return ('', 204)
+    global corr_pheno
+    corr_pheno = args['pheno']
+    to_update['Correlation'] = True
+    with cv:
+        cv.notify_all()
     return ('', 204)
 
 '''

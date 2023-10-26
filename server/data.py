@@ -29,14 +29,14 @@ def mat2vec(fc):
     a,b = np.triu_indices(d,1)
     return fc[a,b]
 
-def get_fc_fname(cohort, sub, task=None, ses=None, typ='fc'):
+def get_conn_fname(cohort, sub, task=None, ses=None, typ='fc'):
     task = f'_task-{task}' if task is not None else ''
     ses = f'_ses-{ses}' if ses is not None else ''
-    fname = f'data/{cohort}/{typ}/{sub}{task}{ses}_{typ}.npy'
+    fname = f'data/{cohort}/conn/{sub}{task}{ses}_{typ}.npy'
     return fname
 
-def has_fc(cohort, sub, task=None, ses=None, typ='fc'):
-    p = Path(get_fc_fname(cohort, sub, task, ses, typ))
+def has_conn(cohort, sub, task=None, ses=None, typ='fc'):
+    p = Path(get_conn_fname(cohort, sub, task, ses, typ))
     return p.exists()
 
 def get_fc(cohort, sub, task=None, ses=None, typ='fc'):
