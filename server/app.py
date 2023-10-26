@@ -41,6 +41,7 @@ corr_pval = None
 corr_pheno = None
 corr_cat = None
 corr_var = None
+corr_task_types = None
 
 # Cohorts
 cohorts = []
@@ -129,7 +130,7 @@ def get_component(comp):
             html = render_template('phenotypes.html', data=pheno_img, have_img=have_img, fields=fields, sel_field=pheno_field)
             return html
         if comp == 'Correlation':
-            global corr_group, corr_img, pval_img, corr_pheno, corr_cat, corr_var
+            global corr_group, corr_img, pval_img, corr_pheno, corr_cat, corr_var, corr_task_types
             grps = [g['name'] for g in groups]
             phenos = []
             cats = None
@@ -151,12 +152,17 @@ def get_component(comp):
             if sel_cohort is not None:
                 conns = sel_cohort['conn']
                 task_types = set()
+                conn_types = set()
                 for f in conns:
                     m = re.match('.*task-([^_]+).*_([^.]+)\.[^.]+$', f)
                     if m is not None:
                         task_types.add(f'{m.group(1)}_{m.group(2)}')
+                        conn_types.add(f'All_{m.group(2)}')
                 task_types = list(task_types)
+                conn_types = list(conn_types)
                 rvars += task_types
+                rvars += conn_types
+                corr_task_types = task_types
             html = render_template('correlation.html', groups=grps, sel_group=corr_group, corr_img=corr_img, pval_img=corr_pval, 
                                    phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat, sel_var=corr_var, resp_vars=rvars)
             return html
@@ -428,7 +434,13 @@ def get_correlation_plots():
     # Otherwise phenotype-phenotype correlation
     if corr_var not in sel_cohort_df.columns:
         task, typ = corr_var.split('_')
-        corr_img, corr_pval = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, task, corr_pheno, corr_cat)
+        # Get all tasks associated with type
+        if task == 'All':
+            tasks = [t.split('_') for t in corr_task_types]
+            tasks = [t[0] for t in tasks if t[1] == typ and t[0] != 'All']
+        else:
+            tasks = [task]
+        corr_img, corr_pval = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, tasks, corr_pheno, corr_cat)
     else:
         corr_img, rho, df, pval = correlation.corr_pheno_pheno(sel_cohort['name'], sel_cohort_df, corr_group, corr_pheno, corr_var, corr_cat)
     to_update['Correlation'] = True

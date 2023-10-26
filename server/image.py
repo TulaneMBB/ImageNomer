@@ -90,12 +90,13 @@ def scatter_private(var1, var2, name1, name2):
     ax.set_ylabel(name2)
     return tobase64(fig)
 
-def violin_private(data, labels, field):
+def violin_private(data, labels, field1, field2):
     fig, ax = plt.subplots()
     ax.violinplot(data, positions=[1,2])
     ax.set_xticks([1,2])
     ax.set_xticklabels(labels)
-    ax.set_ylabel(field)
+    ax.set_xlabel(field1)
+    ax.set_ylabel(field2)
     return tobase64(fig)
 
 def bar_private(data, labels):
@@ -161,11 +162,13 @@ def fill_between_private(bot, top):
     ax.fill_between(np.arange(bot.shape[0]), bot, y2=top, alpha=1)
     return tobase64(fig)
 
-def matshow_private(aset, bset, mat):
+def matshow_private(aset, bset, mat, field1, field2):
     fig, ax = plt.subplots()
     ax.matshow(mat)
     for (i, j), z in np.ndenumerate(mat):
         ax.text(j, i, '{:0.1f}'.format(z), ha='center', va='center')
+    ax.set_xlabel(field1)
+    ax.set_ylabel(field2)
     return tobase64(fig)
 
 # Weird stuff with matplotlib and multithreading? crashes the process
@@ -179,8 +182,8 @@ def groups_hist(df, groups, field):
 def scatter(var1, var2, name1, name2):
     return mp_wrap(scatter_private, var1, var2, name1, name2)
 
-def violin(data, labels, field):
-    return mp_wrap(violin_private, data, labels, field)
+def violin(data, labels, field1, field2):
+    return mp_wrap(violin_private, data, labels, field1, field2)
 
 def bar(data, labels):
     return mp_wrap(bar_private, data, labels)
@@ -203,5 +206,5 @@ def fill_between(bot, top):
 def boxplot(data, labels):
     return mp_wrap(boxplot_private, data, labels)
 
-def matshow(aset, bset, mat):
-    return mp_wrap(matshow_private, aset, bset, mat)
+def matshow(aset, bset, mat, field1, field2):
+    return mp_wrap(matshow_private, aset, bset, mat, field1, field2)
