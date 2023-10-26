@@ -39,8 +39,8 @@ def has_conn(cohort, sub, task=None, ses=None, typ='fc'):
     p = Path(get_conn_fname(cohort, sub, task, ses, typ))
     return p.exists()
 
-def get_fc(cohort, sub, task=None, ses=None, typ='fc'):
-    return np.load(get_fc_fname(cohort, sub, task, ses, typ))
+def get_conn(cohort, sub, task=None, ses=None, typ='fc'):
+    return np.load(get_conn_fname(cohort, sub, task, ses, typ))
 
 def has_snps(cohort, sub, subset):
     fname = f'data/{cohort}/snps/{sub}_set-{subset}_snps.npy'

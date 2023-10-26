@@ -1,6 +1,7 @@
 
 import numpy as np
 import scipy.stats as stats
+from natsort import natsorted
 
 # My modules
 import data
@@ -58,14 +59,14 @@ def corr_feats(feat, var, typ='Pearson', bonf=True):
        var = np.argsort(var)
     # Calculate correlation
     sigma_fv = np.einsum('ab,a->b',feat,var)
-    sigma_ff = np.einsum('ab,ab->b',feat,var)
+    sigma_ff = np.einsum('ab,ab->b',feat,feat)
     sigma_vv = np.einsum('a,a->',var,var)
     rho = sigma_fv/(sigma_ff*sigma_vv)**0.5
     # Sometimes happens with SNPs
     rho[np.isnan(rho)] = 0
     # Get t distribution
-    n = feats.shape[0]
-    m = feats.shape[1]
+    n = feat.shape[0]
+    m = feat.shape[1]
     df = n-2
     t = rho*(df/(1-rho**2))**0.5
     t[t < 0] = -t[t < 0]
@@ -82,7 +83,7 @@ def corr_feats(feat, var, typ='Pearson', bonf=True):
 # Create correlation matrix and p-value matrix
 # For connectivity versus phenotype
 
-def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
+def corr_conn_pheno(coh, df, query, typ, task, field, cat=None, ses=None):
     group = df.index if query == 'All' else df.query(query).index
     # Get fcs and pheno
     fcs = []
@@ -93,22 +94,21 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     colmap = df.columns.get_loc(field)
     for sub in group:
         rowmap[sub] = df.index.get_loc(sub)
-    for task in tasks:
-        for sub in group:
-            if data.has_conn(coh, sub, task, ses, typ=typ):
-                p = df.iloc[rowmap[sub], colmap]
-                if cat is not None:
-                    p = p == cat
-                # pandas will fill in data fields that don't exist for an FC with nan?
-                # This is easiest way to solve
-                elif isnan(p):
-                    continue
-                pheno.append(p)
-                fc = data.get_fc(coh, sub, task, ses, typ=typ)
-                fcs.append(fc)
+    for sub in group:
+        if data.has_conn(coh, sub, task, ses, typ=typ):
+            p = df.iloc[rowmap[sub], colmap]
+            if cat is not None:
+                p = p == cat
+            # pandas will fill in data fields that don't exist for an FC with nan?
+            # This is easiest way to solve
+            elif np.isnan(p):
+                continue
+            pheno.append(p)
+            fc = data.get_conn(coh, sub, task, ses, typ=typ)
+            fcs.append(fc)
     fcs = np.stack(fcs)
     # Get correlation and p-value
-    rho, p, df = corr_feat(fcs, pheno, cat=None)
+    rho, p, df = corr_feats(fcs, pheno)
     rho = data.vec2mat(rho, fillones=False)
     p = data.vec2mat(p, fillones=False)
     # Save correlation for image math
@@ -118,6 +118,43 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     rimg = image.imshow(rho, colorbar=True)
     pimg = image.imshow(p, colorbar=True, reverse_cmap=True)
     return rimg, pimg
+
+# Create pheno-pheno correlation image as well as statistics
+def corr_pheno_pheno(coh, df, query, field1, field2, cat=None):
+    # Load group
+    subset = df.query(query) if query != 'All' else df
+    a = subset[field1].tolist()
+    b = subset[field2].tolist()
+    c = None
+    df = None
+    log10p = None
+    # Both categorical
+    if isinstance(a[0], str) and isinstance(b[0], str):
+        aset = natsorted(list(set(a)))
+        bset = natsorted(list(set(b)))
+        dd = {aa: {bb: 0 for bb in bset} for aa in aset}
+        for aa,bb in zip(a,b):
+            dd[aa][bb] += 1
+        mat = np.zeros((len(aset),len(bset)))
+        for i in range(len(aset)):
+            for j in range(len(bset)):
+                mat[i,j] = dd[aset[i]][bset[j]]
+        img = image.matshow(aset, bset, mat)
+    elif cat is not None:
+        a = subset.query(f'{field1} == "{cat}"')[field2]
+        b = subset.query(f'{field1} != "{cat}"')[field2]
+        a = a.to_numpy()
+        a = a[np.invert(np.isnan(a))] 
+        b = b.to_numpy()
+        b = b[np.invert(np.isnan(b))] 
+        img = image.violin([a,b], [cat, 'Other'], field2)
+        a = list(subset[field1] == cat)
+        b = list(subset[field2])
+        c, log10p, df = corr_vars(a, b)
+    else:
+        img = image.scatter(subset[field1], subset[field2], field1, field2)
+        c, log10p, df = corr_vars(list(subset[field1]), list(subset[field2]))
+    return img, c, df, log10p
 
 def corr_decomp_pheno(ws, pheno, n):
     ws = np.stack(ws)

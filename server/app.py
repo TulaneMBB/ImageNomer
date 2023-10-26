@@ -3,6 +3,7 @@ import threading
 from collections import defaultdict
 from natsort import natsorted
 import numbers
+import re
 
 # Our modules
 import cohort
@@ -36,9 +37,10 @@ pheno_field = None
 # Correlation content pane
 corr_group = None
 corr_img = None
-pval_img = None
+corr_pval = None
 corr_pheno = None
 corr_cat = None
+corr_var = None
 
 # Cohorts
 cohorts = []
@@ -127,7 +129,7 @@ def get_component(comp):
             html = render_template('phenotypes.html', data=pheno_img, have_img=have_img, fields=fields, sel_field=pheno_field)
             return html
         if comp == 'Correlation':
-            global corr_group, corr_img, pval_img, corr_pheno, corr_cat
+            global corr_group, corr_img, pval_img, corr_pheno, corr_cat, corr_var
             grps = [g['name'] for g in groups]
             phenos = []
             cats = None
@@ -145,7 +147,18 @@ def get_component(comp):
                         cats = list(cats)
                 if cats is None:
                     corr_cat = None
-            html = render_template('correlation.html', groups=grps, sel_group=corr_group, corr_img=corr_img, pval_img=pval_img, phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat)
+            rvars = [p for p in phenos]
+            if sel_cohort is not None:
+                conns = sel_cohort['conn']
+                task_types = set()
+                for f in conns:
+                    m = re.match('.*task-([^_]+).*_([^.]+)\.[^.]+$', f)
+                    if m is not None:
+                        task_types.add(f'{m.group(1)}_{m.group(2)}')
+                task_types = list(task_types)
+                rvars += task_types
+            html = render_template('correlation.html', groups=grps, sel_group=corr_group, corr_img=corr_img, pval_img=corr_pval, 
+                                   phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat, sel_var=corr_var, resp_vars=rvars)
             return html
             
 # Server-sent events
@@ -383,40 +396,45 @@ def correlation_panel():
     return ('', 204)
 
 # Select phenotype in correlation
-@app.route('/corr-select-pheno', methods=['POST'])
+@app.route('/corr-change-select', methods=['POST'])
 def corr_select_pheno():
     args = request.form
-    err = validate_args(['pheno'], args, '/corr-select-pheno')
-    if err is not None:
-        print(err)
-        return ('', 204)
-    global corr_pheno
-    corr_pheno = args['pheno']
+    global corr_group, corr_pheno, corr_var, corr_cat
+    corr_group = args['group'] if args['group'] != '' else None
+    corr_pheno = args['pheno'] if args['pheno'] != '' else None
+    corr_var = args['var'] if args['var'] != '' else None
+    corr_cat = args['cat'] if 'cat' in args else None
     to_update['Correlation'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
 
-'''
-
-@app.route('/data/demo/hist', methods=(['GET', 'POST']))
-def demo_hist():
-    if request.method == 'GET':
-        args = request.args
+# Create correlation plots
+@app.route('/get-correlation', methods=['POST'])
+def get_correlation_plots():
+    args = request.form
+    err = validate_args(['group', 'pheno', 'var'], args, '/get-correlation')
+    if err is not None:
+        print(err)
+        return ('', 204)
+    if sel_cohort is None:
+        return ('', 204)
+    global corr_img, corr_group, corr_pval, corr_pheno, corr_var, corr_cat
+    corr_group = args['group']
+    corr_pheno = args['pheno']
+    corr_var = args['var']
+    corr_cat = args['cat'] if 'cat' in args else None
+    # FC or SNPs
+    # Otherwise phenotype-phenotype correlation
+    if corr_var not in sel_cohort_df.columns:
+        task, typ = corr_var.split('_')
+        corr_img, corr_pval = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, task, corr_pheno, corr_cat)
     else:
-        args = request.form
-    args_err = validate_args(['cohort', 'groups', 'field'], 
-        args, request.url)
-    if args_err:
-        return args_err
-    cohort = args['cohort']
-    field = args['field']
-    groups = json.loads(args['groups'])
-    demo = data.get_demo(cohort)
-    df = data.demo2df(demo)
-    img = image.groups_hist(df, groups, field)
-    return jsonify({'data': img})
-'''
+        corr_img, rho, df, pval = correlation.corr_pheno_pheno(sel_cohort['name'], sel_cohort_df, corr_group, corr_pheno, corr_var, corr_cat)
+    to_update['Correlation'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8008, debug=True, threaded=True)

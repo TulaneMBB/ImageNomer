@@ -1,29 +1,35 @@
 {% if corr_img is not none %}
-<img src=''>
+<img style='width: 48%;' src='data:image/png;base64,{{ corr_img }}'>
 {% endif %}
 {% if pval_img is not none %}
-<img src=''>
+<img style='width: 48%;' src='data:image/png;base64,{{ pval_img }}'>
 {% endif %}
 <form data-no-submit class='d-flex'>
-    <select name='group' class='form-select'>
+    <select name='group' class='form-select' hx-post='/corr-change-select' hx-trigger='change' hx-swap='none'>
         <option value='' {{ "selected" if sel_group is none }} disabled>Select Group</option>
         {% for group in groups %}
         <option value="{{ group }}" {{ "selected" if group == sel_group }}>{{ group }}</option>
         {% endfor %}
     </select>
-    <select name='pheno' class='form-select' hx-post='/corr-select-pheno' hx-trigger='change' hx-swap='none'>
+    <select name='pheno' class='form-select' hx-post='/corr-change-select' hx-trigger='change' hx-swap='none'>
         <option value='' {{ "selected" if sel_pheno is none }} disabled>Select Phenotype</option>
         {% for pheno in phenos %}
         <option value="{{ pheno }}" {{ "selected" if pheno == sel_pheno }}>{{ pheno }}</option>
         {% endfor %}
     </select>
     {% if cats is not none %}
-    <select name='cat' class='form-select'>
+    <select name='cat' class='form-select' hx-post='/corr-change-select' hx-trigger='change' hx-swap='none'>
         <option value='' {{ "selected" if sel_cat is none }} disabled>Select Category</option>
         {% for cat in cats %}
         <option value="{{ cat }}" {{ "selected" if cat == sel_cat }}>{{ cat }}</option>
         {% endfor %}
     </select>
     {% endif %}
+    <select name='var' class='form-select' hx-post='/corr-change-select' hx-trigger='change' hx-swap='none'>
+        <option value='' {{ "selected" if sel_var is none }} disabled>Select Response Var</option>
+        {% for var in resp_vars %}
+        <option value="{{ var }}" {{ "selected" if var == sel_var }}>{{ var }}</option>
+        {% endfor %}
+    </select>
     <button class='btn btn-primary' hx-post='/get-correlation' hx-swap='none'>Create</button>
 </form>
