@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, send_file, Response
+from flask import Flask, request, jsonify, render_template, send_file, Response, make_response
 import threading
 from collections import defaultdict
 from natsort import natsorted
@@ -24,72 +24,87 @@ def validate_args(keywords, args, url):
             return error(f'{kw} not in args ({url})')
     return None
 
-# Content pane visible
-content = None
-
-# Overview content pane
-overview_html = None
-
-# Phenotype content pane
-pheno_img = None
-pheno_field = None
-
-# Correlation content pane
-corr_group = None
-corr_img = None
-corr_pval = None
-corr_pheno = None
-corr_cat = None
-corr_var = None
-corr_task_types = None
-
-# Cohorts
-cohorts = []
-sel_cohort_name = None
-sel_cohort = None
-sel_cohort_df = None
-
-# List of groups, their id, and whether they are checked
-groups = [dict(name='All', sel=False)]
-
-# Subjects and subject pagination
-n_subs_per_page = 8
-subs = []
-filtered_subs = subs
-subs_page = 1
-subs_checked = defaultdict(bool)
-
-# For server-sent events
+# Server-sent events and state
 cv = threading.Condition()
 
-to_update = dict(Cohorts=True, GroupsList=True, SubsPagination=True, 
-                 SubsList=True, Overview=False, Phenotypes=False,
-                 Correlation=False)
+# Multiple simultaneous users
 client_idx = 0
+clients = dict()
+
+def make_state():
+    state = dict()
+
+    # Which content pane is visible
+    state['content'] = None
+
+    # Overview content pane
+    state['overview_html'] = None
+
+    # Phenotype content pane
+    state['pheno_img'] = None
+    state['pheno_field']= None
+
+    # Correlation content pane
+    state['corr_group'] = None
+    state['corr_img']= None
+    state['corr_pval'] = None
+    state['corr_pheno'] = None
+    state['corr_cat'] = None
+    state['corr_var'] = None
+    state['corr_task_types'] = None
+    state['corr_stats'] = None
+
+    # Cohorts
+    state['cohorts'] = cohort.ls_cohorts()
+    state['sel_cohort'] = None
+    state['sel_cohort_df'] = None
+
+    # List of groups, their id, and whether they are checked
+    state['groups'] = [dict(name='All', sel=False)]
+
+    # Subjects and subject pagination
+    state['n_subs_per_page'] = 8
+    state['subs'] = []
+    state['filtered_subs'] = state['subs']
+    state['subs_page'] = 1
+    state['subs_checked'] = defaultdict(bool)
+
+    # For server-sent events
+    state['to_update'] = dict(Cohorts=True, GroupsList=True, SubsPagination=True, 
+                              SubsList=True, Overview=False, Phenotypes=False,
+                              Correlation=False)
+
+    return state
 
 # Home screen
 @app.route('/')
 def index():
-    global client_idx, cohorts
+    global clients, client_idx
+    resp = make_response(render_template('index.html'))
+    resp.set_cookie('client_idx', str(client_idx))
+    clients[client_idx] = make_state()
     client_idx += 1
-    cohorts = cohort.ls_cohorts()
-    for k in to_update:
-        to_update[k] = True
-    return render_template('index.html')
+    return resp
 
-def get_component(comp):
+def get_component(comp, idx):
     with app.app_context():
+        global clients
+        state = clients[idx]
         if comp == 'GroupsList':
-            html = render_template('groups-list.html', groups=enumerate(groups))
+            html = render_template('groups-list.html', groups=enumerate(state['groups']))
             return html
         if comp == 'SubsPagination':
-            if len(filtered_subs) == 0:
+            if len(state['filtered_subs']) == 0:
                 view_pages = []
                 has_prev = False
                 has_next = False
             else:
+                filtered_subs = state['filtered_subs']
+                n_subs_per_page = state['n_subs_per_page']
+                subs_page = state['subs_page']
                 last_page = (len(filtered_subs)-1) // n_subs_per_page + 1
                 pages = list(range(1, last_page + 1))
+                subs_page = state['subs_page']
                 st = subs_page-3 if subs_page > 2 else 0
                 end = subs_page+2
                 view_pages = pages[st:end]
@@ -98,6 +113,11 @@ def get_component(comp):
             html = render_template('subs-pagination.html', view_pages=view_pages, has_prev=has_prev, has_next=has_next)
             return html
         if comp == 'SubsList':
+            filtered_subs = state['filtered_subs']
+            n_subs_per_page = state['n_subs_per_page']
+            subs_page = state['subs_page']
+            subs_checked = state['subs_checked']
+            subs = state['subs']
             st = (subs_page-1) * n_subs_per_page
             end = st + n_subs_per_page
             checked = []
@@ -114,24 +134,39 @@ def get_component(comp):
             html = render_template('subs-list.html', subs=zip(range(st, end), filtered_subs[st:end], checked), nsubs=len(subs), nsel=nsel)
             return html
         if comp == 'Cohorts':
-            global sel_cohort_name, cohorts
+            cohorts = state['cohorts']
+            if state['sel_cohort'] is not None:
+                sel_cohort_name = state['sel_cohort']['name']
+            else:
+                sel_cohort_name = None
             html = render_template('cohorts.html', cohorts=cohorts, sel_cohort=sel_cohort_name)
             return html
         if comp == 'Overview':
-            global overview_html
+            overview_html = state['overview_html']
             if overview_html is None:
                 return '<div></div>'
             else:
                 return overview_html
         if comp == 'Phenotypes':
-            global sel_cohort_df, pheno_img, pheno_field
+            sel_cohort_df = state['sel_cohort_df']
+            pheno_img = state['pheno_img']
+            pheno_field = state['pheno_field']
             have_img = pheno_img is not None
             fields = sel_cohort_df.columns if sel_cohort_df is not None else []
             html = render_template('phenotypes.html', data=pheno_img, have_img=have_img, fields=fields, sel_field=pheno_field)
             return html
         if comp == 'Correlation':
-            global corr_group, corr_img, pval_img, corr_pheno, corr_cat, corr_var, corr_task_types
-            grps = [g['name'] for g in groups]
+            corr_group = state['corr_group']
+            corr_img = state['corr_img']
+            corr_pval = state['corr_pval']
+            corr_pheno = state['corr_pheno']
+            corr_cat = state['corr_cat']
+            corr_var = state['corr_var']
+            corr_task_types = state['corr_task_types']
+            corr_stats = state['corr_stats']
+            sel_cohort = state['sel_cohort']
+            sel_cohort_df = state['sel_cohort_df']
+            grps = [g['name'] for g in state['groups']]
             phenos = []
             cats = None
             if sel_cohort_df is not None:
@@ -162,27 +197,31 @@ def get_component(comp):
                 conn_types = list(conn_types)
                 rvars += task_types
                 rvars += conn_types
-                corr_task_types = task_types
+                state['corr_task_types'] = task_types
             html = render_template('correlation.html', groups=grps, sel_group=corr_group, corr_img=corr_img, pval_img=corr_pval, 
-                                   phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat, sel_var=corr_var, resp_vars=rvars)
+                                   phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat, sel_var=corr_var, resp_vars=rvars, 
+                                   stats=corr_stats)
             return html
             
 # Server-sent events
 @app.route('/sse')
 def sse():
-    my_client_idx = client_idx
+    global clients
+    my_client_idx = int(request.cookies.get('client_idx'))
+    print(my_client_idx)
     def event_stream():
         while True:
             with cv:
-                if my_client_idx != client_idx:
-                    return
-                for comp, upd in to_update.items():
-                    if upd:
-                        to_update[comp] = False
-                        data = get_component(comp)
-                        data = " ".join(line.strip() for line in data.splitlines())
-                        msg = f'event: {comp}\ndata: {data}\n\n'
-                        yield msg
+                for client_idx, state in clients.items():
+                    if my_client_idx == client_idx:
+                        to_update = state['to_update']
+                        for comp, upd in to_update.items():
+                            if upd:
+                                to_update[comp] = False
+                                data = get_component(comp, client_idx)
+                                data = " ".join(line.strip() for line in data.splitlines())
+                                msg = f'event: {comp}\ndata: {data}\n\n'
+                                yield msg
                 cv.wait()
     return Response(event_stream(), mimetype='text/event-stream')
 
@@ -190,10 +229,15 @@ def sse():
 @app.route('/create-group', methods=['POST'])
 def create_group():
     args = request.form
+    my_client_idx = int(request.cookies.get('client_idx'))
     err = validate_args(['group-text'], args, '/create-group')
     if err is not None:
         print(err)
         return jsonify(err)
+    global clients
+    state = clients[my_client_idx]
+    groups = state['groups']
+    to_update = state['to_update']
     groups.append(dict(name=args['group-text'], sel=False))
     to_update['GroupsList'] = True
     to_update['Correlation'] = True
@@ -205,14 +249,20 @@ def create_group():
 @app.route('/filter-subjects', methods=['POST'])
 def filter_subjects():
     args = request.form
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
     err = validate_args(['filter-text'], args, '/filter-subjects')
     if err is not None:
         print(err)
         return jsonify(err)
-    global filtered_subs, subs_page
     pattern = args['filter-text']
-    filtered_subs = [s for s in subs if pattern in str(s)]
-    if len(filtered_subs) < (subs_page-1) * n_subs_per_page + 1:
+    subs = state['subs']
+    subs_page = state['subs_page']
+    n_subs_per_page = state['n_subs_per_page']
+    to_update = state['to_update']
+    state['filtered_subs'] = [s for s in subs if pattern in str(s)]
+    if len(state['filtered_subs']) < (subs_page-1) * n_subs_per_page + 1:
         subs_page = 1
     to_update['SubsPagination'] = True
     to_update['SubsList'] = True
@@ -225,17 +275,22 @@ def filter_subjects():
 def change_subjects_page():
     args = request.form
     err = validate_args(['page'], args, '/subjects-page')
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
     if err is not None:
         print(err)
         return jsonify(err)
-    global filtered_subs, subs_page
     p = args['page']
+    filtered_subs = state['filtered_subs']
+    n_subs_per_page = state['n_subs_per_page']
     if p == 'First':
-        subs_page = 1
+        state['subs_page'] = 1
     elif p == 'Last':
-        subs_page = (len(filtered_subs)+1) // n_subs_per_page + 1
+        state['subs_page'] = (len(filtered_subs)+1) // n_subs_per_page + 1
     else:
-        subs_page = int(p)
+        state['subs_page'] = int(p)
+    to_update = state['to_update']
     to_update['SubsPagination'] = True
     to_update['SubsList'] = True
     with cv:
@@ -247,10 +302,14 @@ def change_subjects_page():
 def change_subject_checked():
     args = request.form
     err = validate_args(['subid'], args, '/subject-checked')
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
     if err is not None:
         print(err)
         return jsonify(err)
-    global subs_checked
+    subs_checked = state['subs_checked']
+    to_update = state['to_update']
     subid = args['subid']
     subs_checked[subid] = False if subs_checked[subid] else True
     to_update['SubsList'] = True
@@ -263,19 +322,22 @@ def change_subject_checked():
 def change_cohort():
     args = request.form
     err = validate_args(['cohort'], args, '/cohort')
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
     if err is not None:
         print(err)
         return ('', 204)
     coh = args['cohort']
     if coh == '':
         return ('', 204)
-    global sel_cohort_name, sel_cohort, sel_cohort_df, subs, filtered_subs, overview_html
-    sel_cohort_name = coh
-    sel_cohort = cohort.get_cohort(coh)
-    sel_cohort_df = data.demo2df(sel_cohort['demo'])
-    subs = natsorted(list(sel_cohort_df.index))
-    filtered_subs = subs
-    overview_html = None
+    to_update = state['to_update']
+    content = state['content']
+    state['sel_cohort'] = cohort.get_cohort(coh)
+    state['sel_cohort_df'] = data.demo2df(state['sel_cohort']['demo'])
+    state['subs'] = natsorted(list(state['sel_cohort_df'].index))
+    state['filtered_subs'] = state['subs']
+    state['overview_html'] = None
     if content == 'Overview':
         overview_panel()
     for comp in to_update:
@@ -290,12 +352,14 @@ def decim(v):
 # Overview pane
 @app.route('/overview', methods=['POST'])
 def overview_panel():
-    if sel_cohort is None:
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    if state['sel_cohort'] is None:
         return ('', 204)
-    global overview_html, content
-    content = 'Overview'
-    if overview_html is None:
-        demo = sel_cohort['demo']
+    state['content'] = 'Overview'
+    if state['overview_html'] is None:
+        demo = state['sel_cohort']['demo']
         # Get stats
         stats = []
         for col, vals in demo.items():
@@ -322,7 +386,8 @@ def overview_panel():
                 d['counts'] = counts
                 d['numeric'] = False
             stats.append(d)
-        overview_html = render_template('overview.html', stats=stats)
+        state['overview_html'] = render_template('overview.html', stats=stats)
+        to_update = state['to_update']
         to_update['Overview'] = True
         with cv:
             cv.notify_all()
@@ -336,8 +401,13 @@ def change_group_checked():
     if err is not None:
         print(err)
         return ('', 204)
-    global groups, content
     idx = int(args['group'])
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    groups = state['groups']
+    content = state['content']
+    to_update = state['to_update']
     groups[idx]['sel'] = not groups[idx]['sel']
     to_update['Phenotypes'] = True
     if content == 'Phenotypes':
@@ -347,18 +417,23 @@ def change_group_checked():
 # Phenotypes panel
 @app.route('/phenotypes', methods=['POST'])
 def phenotypes_panel():
-    global sel_cohort_df, groups, pheno_img, content, pheno_field
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    sel_cohort_df = state['sel_cohort_df']
+    groups = state['groups']
+    pheno_field = state['pheno_field']
     if sel_cohort_df is None:
-        pheno_img = None
+        state['pheno_img'] = None
         return ('', 204)
     if pheno_field is None:
-        pheno_img = None
+        state['pheno_img'] = None
         return ('', 204)
     queries = [g['name'] for g in groups if g['sel']]
     grps = dict()
     for query in queries:
         if query == 'All':
-            grps['All'] = subs
+            grps['All'] = state['subs']
             continue
         try:
             g = [str(i) for i in list(sel_cohort_df.query(query).index)]
@@ -367,11 +442,11 @@ def phenotypes_panel():
         except:
             print(f'Bad group {query}')
     if len(grps) == 0:
-        pheno_img = None
+        state['pheno_img'] = None
     else:
-        pheno_img = image.groups_hist(sel_cohort_df, grps, pheno_field)
-    content = 'Phenotypes'
-    to_update['Phenotypes'] = True
+        state['pheno_img'] = image.groups_hist(sel_cohort_df, grps, pheno_field)
+    state['content'] = 'Phenotypes'
+    state['to_update']['Phenotypes'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
@@ -384,19 +459,24 @@ def change_phenotypes_field():
     if err is not None:
         print(err)
         return ('', 204)
-    global pheno_field
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
     field = args['field']
     if field == '':
         return ('', 204)
-    pheno_field = field
+    state['pheno_field'] = field
     phenotypes_panel()
     return ('', 204)
 
 # Correlation panel
 @app.route('/correlation', methods=['POST'])
 def correlation_panel():
-    content = 'Correlation'
-    to_update['Correlation'] = True
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    state['content'] = 'Correlation'
+    state['to_update']['Correlation'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
@@ -405,12 +485,14 @@ def correlation_panel():
 @app.route('/corr-change-select', methods=['POST'])
 def corr_select_pheno():
     args = request.form
-    global corr_group, corr_pheno, corr_var, corr_cat
-    corr_group = args['group'] if args['group'] != '' else None
-    corr_pheno = args['pheno'] if args['pheno'] != '' else None
-    corr_var = args['var'] if args['var'] != '' else None
-    corr_cat = args['cat'] if 'cat' in args else None
-    to_update['Correlation'] = True
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    state['corr_group'] = args['group'] if args['group'] != '' else None
+    state['corr_pheno'] = args['pheno'] if args['pheno'] != '' else None
+    state['corr_var'] = args['var'] if args['var'] != '' else None
+    state['corr_cat'] = args['cat'] if 'cat' in args else None
+    state['to_update']['Correlation'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
@@ -423,13 +505,24 @@ def get_correlation_plots():
     if err is not None:
         print(err)
         return ('', 204)
-    if sel_cohort is None:
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    if state['sel_cohort'] is None:
         return ('', 204)
-    global corr_img, corr_group, corr_pval, corr_pheno, corr_var, corr_cat
-    corr_group = args['group']
-    corr_pheno = args['pheno']
-    corr_var = args['var']
-    corr_cat = args['cat'] if 'cat' in args else None
+    global corr_img, corr_group, corr_pval, corr_pheno, corr_var, corr_cat, corr_stats
+    state['corr_group'] = args['group']
+    state['corr_pheno'] = args['pheno']
+    state['corr_var'] = args['var']
+    state['corr_cat'] = args['cat'] if 'cat' in args else None
+    sel_cohort = state['sel_cohort']
+    sel_cohort_df = state['sel_cohort_df']
+    corr_group = state['corr_group']
+    corr_pheno = state['corr_pheno']
+    corr_var = state['corr_var']
+    corr_cat = state['corr_cat']
+    corr_task_types = state['corr_task_types']
+    to_update = state['to_update']
     # FC or SNPs
     # Otherwise phenotype-phenotype correlation
     if corr_var not in sel_cohort_df.columns:
@@ -440,9 +533,12 @@ def get_correlation_plots():
             tasks = [t[0] for t in tasks if t[1] == typ and t[0] != 'All']
         else:
             tasks = [task]
-        corr_img, corr_pval = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, tasks, corr_pheno, corr_cat)
+        state['corr_img'], state['corr_pval'] = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, tasks, corr_pheno, corr_cat)
+        corr_stats = None
     else:
-        corr_img, rho, df, pval = correlation.corr_pheno_pheno(sel_cohort['name'], sel_cohort_df, corr_group, corr_pheno, corr_var, corr_cat)
+        state['corr_img'], rho, df, pval = correlation.corr_pheno_pheno(sel_cohort['name'], sel_cohort_df, corr_group, corr_pheno, corr_var, corr_cat)
+        state['corr_pval'] = None
+        state['corr_stats'] = {'rho': decim(rho), 'df': df, 'pval': decim(pval)}
     to_update['Correlation'] = True
     with cv:
         cv.notify_all()

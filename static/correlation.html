@@ -4,6 +4,11 @@
 {% if pval_img is not none %}
 <img style='width: 48%;' src='data:image/png;base64,{{ pval_img }}'>
 {% endif %}
+{% if stats is not none %}
+<p>
+    Corr: {{ stats.rho }} DF: {{ stats.df }} Pval: {{ stats.pval }}
+</p>
+{% endif %}
 <form data-no-submit class='d-flex'>
     <select name='group' class='form-select' hx-post='/corr-change-select' hx-trigger='change' hx-swap='none'>
         <option value='' {{ "selected" if sel_group is none }} disabled>Select Group</option>
