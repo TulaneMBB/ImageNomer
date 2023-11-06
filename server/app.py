@@ -4,6 +4,7 @@ from collections import defaultdict
 from natsort import natsorted
 import numbers
 import re
+import numpy as np
 
 # Our modules
 import cohort
@@ -51,6 +52,7 @@ def make_state():
     state['conn_subs'] = []
     state['conn_page'] = 1
     state['n_conn_per_page'] = 20
+    state['conn_summary_img'] = None
 
     # Correlation content pane
     state['corr_group'] = None
@@ -77,12 +79,29 @@ def make_state():
     state['subs_page'] = 1
     state['subs_checked'] = defaultdict(bool)
 
+    # Saved images
+    state['saved_imgs'] = dict()
+    state['saved_count'] = 0
+    state['saved_desc'] = dict()
+
     # For server-sent events
     state['to_update'] = dict(Cohorts=True, GroupsList=True, SubsPagination=True, 
                               SubsList=True, Overview=False, Phenotypes=False,
-                              Correlation=False)
+                              Correlation=False, Connectivity=False)
 
     return state
+
+def next_saved_id(state):
+    m = state['saved_count']
+    sid = []
+    while True:
+        n = m%26+1
+        sid.append(chr(64+n))
+        m = math.floor(m/26)
+        if m <= 0:
+            break
+    state['saved_count'] += 1
+    return ''.join(sid[::-1])
 
 # Home screen
 @app.route('/')
@@ -211,6 +230,10 @@ def get_component(comp, idx):
                                    stats=corr_stats)
             return html
         if comp == 'Connectivity':
+            summary = state['conn_summary_img']
+            if summary is not None:
+                html = render_template('connectivity.html', summary_img=summary)
+                return html
             conn_types = state['conn_types']
             conn_tasks = state['conn_tasks']
             conn_fields = state['conn_fields']
@@ -232,7 +255,7 @@ def get_component(comp, idx):
                     conn_tasks[task] = True
                 for field in sel_cohort_df.columns:
                     conn_fields[field] = False
-            html = render_template('connectivity.html', conn_types=conn_types, conn_tasks=conn_tasks, conn_fields=conn_fields)
+            html = render_template('connectivity.html', summary_img=None, conn_types=conn_types, conn_tasks=conn_tasks, conn_fields=conn_fields)
             return html
             
 # Server-sent events
@@ -542,7 +565,6 @@ def get_correlation_plots():
     state = clients[my_client_idx]
     if state['sel_cohort'] is None:
         return ('', 204)
-    global corr_img, corr_group, corr_pval, corr_pheno, corr_var, corr_cat, corr_stats
     state['corr_group'] = args['group']
     state['corr_pheno'] = args['pheno']
     state['corr_var'] = args['var']
@@ -583,6 +605,7 @@ def connectivity_panel():
     global clients
     state = clients[my_client_idx]
     state['content'] = 'Connectivity'
+    state['conn_summary_img'] = None
     state['to_update']['Connectivity'] = True
     with cv:
         cv.notify_all()
@@ -620,6 +643,46 @@ def connectivity_checked_changed():
         for k in args:
             if k == f'field-{field}':
                 conn_fields[field] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Connectivity mean image
+@app.route('/conn-mean', methods=['POST'])
+def get_connectivity_mean():
+    my_client_idx = int(request.cookies.get('client_idx'))
+    args = request.form
+    if 'mean' not in args and 'std' not in args:
+        print('Not mean or std img')
+        return ('', 204)
+    global clients
+    state = clients[my_client_idx]
+    sel_cohort = state['sel_cohort']
+    conn_types = state['conn_types']
+    conn_tasks = state['conn_tasks']
+    if sel_cohort == None:
+        print('No cohort selected')
+        return ('', 204)
+    ps = []
+    for f in sel_cohort['conn']:
+        m = re.match('.*task-([^_]+).*_([^.]+)\.[^.]+$', f)
+        if m:
+            task = m.group(1)
+            typ = m.group(2)
+            if conn_types[typ] and conn_tasks[task]:
+                ps.append(np.load(f'data/{sel_cohort["name"]}/conn/{f}'))
+    if len(ps) == 0:
+        print('No connectivity files')
+        return ('', 204)    
+    summary = None
+    if 'mean' in args:
+        summary = np.mean(ps, axis=0)
+    elif 'std' in args:
+        summary = np.std(ps, axis=0)
+    summary = image.imshow(data.vec2mat(summary, fillones=False))
+    state['content'] = 'Connectivity'
+    state['to_update']['Connectivity'] = True
+    state['conn_summary_img'] = summary
     with cv:
         cv.notify_all()
     return ('', 204)
