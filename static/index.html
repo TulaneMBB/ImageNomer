@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme='dark'>
+<!--<html lang="en" data-bs-theme='dark'>-->
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,6 @@ window.addEventListener('load', function() {
     $ = q => document.querySelector(q);
     $$ = q => [...document.querySelectorAll(q)];
     $$('[data-no-submit]').forEach(e => {
-        console.log('okay');
         window.addEventListener('keydown', event => {
             if(event.keyCode == 13) {
                 event.preventDefault();
@@ -68,7 +68,7 @@ window.addEventListener('load', function() {
                         <a class='nav-link' href='#phenotypes' hx-post='/phenotypes' hx-swap='none'>Phenotypes</a>
                     </li>
                     <li class='nav-item'>
-                        <a class="nav-link" href='#'>Connectivity</a>
+                        <a class="nav-link" href='#connectivity' hx-post='/connectivity' hx-swap='none'>Connectivity</a>
                     </li>
                     <li class='nav-item'>
                         <a class='nav-link' href='#'>SNPs</a>
@@ -88,6 +88,7 @@ window.addEventListener('load', function() {
                 </ul>
                 <section id='overview' hx-sse='swap:Overview'></section>
                 <section id='phenotypes' hx-sse='swap:Phenotypes'></section>
+                <section id='connectivity' hx-sse='swap:Connectivity'></section>
                 <section id='correlation' hx-sse='swap:Correlation'></section>
             </div>
         </div>

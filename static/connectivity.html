@@ -1,0 +1,23 @@
+<form data-no-submit>
+    <h6>Types</h6>
+        {% for type,sel in conn_types.items() %}
+        <div class='form-check form-check-inline'>
+            <input class="form-check-input" type="checkbox" name='type-{{ type }}' hx-post='/conn-change-checked' hx-trigger='change' hx-swap='none' {{ "checked" if sel }}>
+            <label class="form-check-label">{{ type }}</label>
+        </div>
+        {% endfor %}
+    <h6>Tasks</h6>
+        {% for task,sel in conn_tasks.items() %}
+        <div class='form-check form-check-inline'>
+            <input class="form-check-input" type="checkbox" name='task-{{ task }}' hx-post='/conn-change-checked' hx-trigger='change' hx-swap='none' {{ "checked" if sel }}>
+            <label class="form-check-label">{{ task }}</label>
+        </div>
+        {% endfor %}
+    <h6>Fields</h6>
+        {% for field,sel in conn_fields.items() %}
+        <div class='form-check form-check-inline'>
+            <input class="form-check-input" type="checkbox" name='field-{{ field }}' hx-post='/conn-change-checked' hx-trigger='change' hx-swap='none' {{ "checked" if sel }}>
+            <label class="form-check-label">{{ field }}</label>
+        </div>
+        {% endfor %}
+</form>

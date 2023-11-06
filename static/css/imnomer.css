@@ -17,10 +17,10 @@
     margin-left: 10px;
 }
 
-#overview, #phenotypes, #correlation {
+#overview, #phenotypes, #connectivity, #correlation {
     display: none;
 }
 
-#overview:target, #phenotypes:target, #correlation:target {
+#overview:target, #phenotypes:target, #connectivity:target, #correlation:target {
     display: block;
 }

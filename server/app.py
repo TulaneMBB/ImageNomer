@@ -44,6 +44,14 @@ def make_state():
     state['pheno_img'] = None
     state['pheno_field']= None
 
+    # Connectivity content pane
+    state['conn_types'] = dict()
+    state['conn_tasks'] = dict()
+    state['conn_fields'] = dict()
+    state['conn_subs'] = []
+    state['conn_page'] = 1
+    state['n_conn_per_page'] = 20
+
     # Correlation content pane
     state['corr_group'] = None
     state['corr_img']= None
@@ -201,6 +209,30 @@ def get_component(comp, idx):
             html = render_template('correlation.html', groups=grps, sel_group=corr_group, corr_img=corr_img, pval_img=corr_pval, 
                                    phenos=phenos, sel_pheno=corr_pheno, cats=cats, sel_cat=corr_cat, sel_var=corr_var, resp_vars=rvars, 
                                    stats=corr_stats)
+            return html
+        if comp == 'Connectivity':
+            conn_types = state['conn_types']
+            conn_tasks = state['conn_tasks']
+            conn_fields = state['conn_fields']
+            sel_cohort = state['sel_cohort']
+            sel_cohort_df = state['sel_cohort_df']
+            # Initialize types
+            if len(conn_types) == 0 and sel_cohort is not None:
+                conns = sel_cohort['conn']
+                tasks = set()
+                types = set()
+                for f in conns:
+                    m = re.match('.*task-([^_]+).*_([^.]+)\.[^.]+$', f)
+                    if m is not None:
+                        tasks.add(m.group(1))
+                        types.add(m.group(2))
+                for typ in types:
+                    conn_types[typ] = True
+                for task in tasks:
+                    conn_tasks[task] = True
+                for field in sel_cohort_df.columns:
+                    conn_fields[field] = False
+            html = render_template('connectivity.html', conn_types=conn_types, conn_tasks=conn_tasks, conn_fields=conn_fields)
             return html
             
 # Server-sent events
@@ -540,6 +572,54 @@ def get_correlation_plots():
         state['corr_pval'] = None
         state['corr_stats'] = {'rho': decim(rho), 'df': df, 'pval': decim(pval)}
     to_update['Correlation'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Connectivity panel
+@app.route('/connectivity', methods=['POST'])
+def connectivity_panel():
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    state['content'] = 'Connectivity'
+    state['to_update']['Connectivity'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Connectivity panel checkbox selection changed
+@app.route('/conn-change-checked', methods=['POST'])
+def connectivity_checked_changed():
+    args = request.form
+    # Args can be variable and are preceded by type- task- and field-
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    state['content'] = 'Connectivity'
+    state['to_update']['Connectivity'] = True
+    conn_types = state['conn_types']
+    conn_tasks = state['conn_tasks']
+    conn_fields = state['conn_fields']
+    for typ in conn_types:
+        conn_types[typ] = False
+    for task in conn_tasks:
+        conn_tasks[task] = False
+    for field in conn_fields:
+        conn_fields[field] = False
+    for typ in conn_types:
+        for k in args:
+            if k == f'type-{typ}':
+                conn_types[typ] = True
+    for task in conn_tasks:
+        for k in args:
+            if k == f'task-{task}':
+                conn_tasks[task] = True
+    # ID always displayed
+    for field in conn_fields:
+        for k in args:
+            if k == f'field-{field}':
+                conn_fields[field] = True
     with cv:
         cv.notify_all()
     return ('', 204)

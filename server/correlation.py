@@ -86,7 +86,7 @@ def corr_feats(feat, var, typ='Pearson', bonf=True):
 def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     group = df.index if query == 'All' else df.query(query).index
     # Get fcs and pheno
-    fcs = []
+    # Fcs allocated later
     pheno = []
     # Get map from index to row number
     # So we can use iloc instead of loc later
@@ -94,6 +94,28 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     colmap = df.columns.get_loc(field)
     for sub in group:
         rowmap[sub] = df.index.get_loc(sub)
+    # To remove memory pressure, preallocate array
+    count = 0
+    size = None
+    for task in tasks:
+        for sub in group:
+            if data.has_conn(coh, sub, task, ses, typ=typ):
+                p = df.iloc[rowmap[sub], colmap]
+                if cat is not None:
+                    p = p == cat
+                # pandas will fill in data fields that don't exist for an FC with nan?
+                # This is easiest way to solve
+                elif np.isnan(p):
+                    continue
+                count += 1
+                if count % 10000 == 0:
+                    print(count)
+                if size is None:
+                    fc = data.get_conn(coh, sub, task, ses, typ=typ)
+                    size = fc.shape[0]
+    fcs = np.empty((count, size))
+    print('Done preallocating')
+    count = 0
     for task in tasks:
         for sub in group:
             if data.has_conn(coh, sub, task, ses, typ=typ):
@@ -106,8 +128,11 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
                     continue
                 pheno.append(p)
                 fc = data.get_conn(coh, sub, task, ses, typ=typ)
-                fcs.append(fc)
-    fcs = np.stack(fcs)
+                fcs[count,:] = fc
+                count += 1
+                if count % 10000 == 0:
+                    print(count)
+    #fcs = np.stack(fcs)
     # Get correlation and p-value
     rho, p, df = corr_feats(fcs, pheno)
     rho = data.vec2mat(rho, fillones=False)

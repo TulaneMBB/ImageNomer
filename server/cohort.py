@@ -103,7 +103,14 @@ def get_cohort(cohort):
 def get_tasks(cohort):
     c = get_cohort(cohort)
     tasks = set()
-    for fname in c['fc']:
+    for fname in c['conn']:
         tasks.add(re.match('.*task-([^_]+)', fname).group(1))
     return list(tasks)
+
+def get_types(cohort):
+    c = get_cohort(cohort)
+    types = set()
+    for fname in c['conn']:
+        types.add(re.match('.*task-[^_]+_([^.]).npy$', fname).group(1))
+    return list(types)
     
