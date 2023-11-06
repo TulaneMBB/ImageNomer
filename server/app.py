@@ -12,6 +12,7 @@ import cohort
 import data
 import image
 import correlation
+import image_math
 
 app = Flask(__name__,
     template_folder='../static',
@@ -84,6 +85,7 @@ def make_state():
     state['saved_imgs'] = dict()
     state['saved_count'] = 0
     state['saved_desc'] = dict()
+    state['saved_eq'] = None
 
     # For server-sent events
     state['to_update'] = dict(Cohorts=True, GroupsList=True, SubsPagination=True, 
@@ -257,6 +259,27 @@ def get_component(comp, idx):
                 for field in sel_cohort_df.columns:
                     conn_fields[field] = False
             html = render_template('connectivity.html', summary_img=None, conn_types=conn_types, conn_tasks=conn_tasks, conn_fields=conn_fields)
+            return html
+        if comp == 'ImageMath':
+            saved_eq = state['saved_eq']
+            saved_imgs = state['saved_imgs']
+            saved_desc = state['saved_desc']
+            keys = natsorted(list(saved_imgs.keys()))
+            descs = []
+            for k in keys:
+                descs.append((k, saved_desc[k]))
+            res_img = None
+            if saved_eq is None:
+                if len(keys) == 0:
+                    saved_eq = ''
+                else:
+                    saved_eq = keys[-1]
+                    res_img = saved_imgs[keys[-1]]
+                    res_img = image.imshow(res_img)
+            else:
+                res_img = image_math.eval(saved_eq, state)
+                res_img = image.imshow(res_img)
+            html = render_template('image-math.html', res_img=res_img, equation=saved_eq, descs=descs)
             return html
             
 # Server-sent events
@@ -720,7 +743,6 @@ def get_connectivity_mean():
         if sel:
             sum_tasks.append(c)
     saved_desc[sid] = {'im_type': sum_im_type, 'types': sum_types, 'tasks': sum_tasks, 'groups': group_descs, 'nsubs': len(group_subs), 'nscans': len(ps)}
-    print(saved_desc)
     summary = image.imshow(summary)
     state['content'] = 'Connectivity'
     state['to_update']['Connectivity'] = True
@@ -729,12 +751,29 @@ def get_connectivity_mean():
         cv.notify_all()
     return ('', 204)
 
-# Connectivity panel
+# Image math panel
 @app.route('/image-math', methods=['POST'])
 def image_math_panel():
     my_client_idx = int(request.cookies.get('client_idx'))
     global clients
     state = clients[my_client_idx]
+    state['content'] = 'ImageMath'
+    state['to_update']['ImageMath'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Calculate image math equation 
+@app.route('/calc-image-math', methods=['POST'])
+def calc_math_image():
+    args = request.form
+    if 'equation' not in args or args['equation'] == '':
+        print('No equation')
+        return ('', 204)
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    state['saved_eq'] = args['equation']
     state['content'] = 'ImageMath'
     state['to_update']['ImageMath'] = True
     with cv:

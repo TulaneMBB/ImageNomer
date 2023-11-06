@@ -83,13 +83,14 @@ window.addEventListener('load', function() {
                         <a class='nav-link' href='#'>Weights</a>
                     </li>
                     <li class='nav-item'>
-                        <a class='nav-link' href='#'>Image Math</a>
+                        <a class='nav-link' href='#image-math' hx-post='/image-math' hx-swap='none'>Image Math</a>
                     </li>
                 </ul>
                 <section id='overview' hx-sse='swap:Overview'></section>
                 <section id='phenotypes' hx-sse='swap:Phenotypes'></section>
                 <section id='connectivity' hx-sse='swap:Connectivity'></section>
                 <section id='correlation' hx-sse='swap:Correlation'></section>
+                <section id='image-math' hx-sse='swap:ImageMath'></section>
             </div>
         </div>
     </div>

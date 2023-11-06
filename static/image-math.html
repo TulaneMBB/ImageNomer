@@ -1,1 +1,12 @@
-<img style='width: 48%;' src='data:image/png;base64,{{ im_math_img }}'>
+{% if res_img is not none %}
+    <img style='width: 48%;' src='data:image/png;base64,{{ res_img }}'>
+{% endif %}
+<form>
+    <label for='equation'>Equation (e.g. A-BB*C, D)</label>
+    <input type='text' class='form-control' value='{{ equation }}' id='equation' name='equation'>
+    <button type='button' class='btn btn-primary' id='calc-image-math' hx-post='/calc-image-math' hx-swap='none'>Calculate</button>
+</form>
+<h6>Saved Images</h6>
+{% for label,desc in descs %}
+<div class='form-text'>{{ label }}: {{ desc }}</div>
+{% endfor %}
