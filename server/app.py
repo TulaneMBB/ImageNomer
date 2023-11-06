@@ -5,6 +5,7 @@ from natsort import natsorted
 import numbers
 import re
 import numpy as np
+import math
 
 # Our modules
 import cohort
@@ -87,7 +88,7 @@ def make_state():
     # For server-sent events
     state['to_update'] = dict(Cohorts=True, GroupsList=True, SubsPagination=True, 
                               SubsList=True, Overview=False, Phenotypes=False,
-                              Correlation=False, Connectivity=False)
+                              Correlation=False, Connectivity=False, ImageMath=False)
 
     return state
 
@@ -658,31 +659,84 @@ def get_connectivity_mean():
     global clients
     state = clients[my_client_idx]
     sel_cohort = state['sel_cohort']
+    sel_cohort_df = state['sel_cohort_df']
     conn_types = state['conn_types']
     conn_tasks = state['conn_tasks']
+    groups = state['groups']
     if sel_cohort == None:
         print('No cohort selected')
         return ('', 204)
+    # Get subjects
+    group_subs = set()
+    group_descs = list()
+    for g in groups:
+        if g['sel']:
+            if g['name'] == 'All':
+                group_subs.update(sel_cohort_df.index)
+                group_descs = ['All']
+                break
+            else:
+                group_subs.update(sel_cohort_df.query(g['name']).index)
+                group_descs.append(g['name'])
+    if len(group_subs) == 0:
+        print('No subjects selected')
+        return ('', 204)
     ps = []
-    for f in sel_cohort['conn']:
-        m = re.match('.*task-([^_]+).*_([^.]+)\.[^.]+$', f)
+    # Sorts by subject since it's first field
+    for f in natsorted(sel_cohort['conn']):
+        m = re.match('(.*)_task-([^_]+)_?[^_]*_([^.]+)\.[^.]+$', f)
         if m:
-            task = m.group(1)
-            typ = m.group(2)
+            sub = m.group(1)
+            task = m.group(2)
+            typ = m.group(3)
+            if sub not in group_subs:
+                continue
             if conn_types[typ] and conn_tasks[task]:
                 ps.append(np.load(f'data/{sel_cohort["name"]}/conn/{f}'))
     if len(ps) == 0:
         print('No connectivity files')
         return ('', 204)    
     summary = None
+    sum_im_type = None
     if 'mean' in args:
+        sum_im_type = 'mean'
         summary = np.mean(ps, axis=0)
     elif 'std' in args:
+        sum_im_type = 'std'
         summary = np.std(ps, axis=0)
-    summary = image.imshow(data.vec2mat(summary, fillones=False))
+    summary = data.vec2mat(summary, fillones=False)
+    # Save for image math
+    saved_imgs = state['saved_imgs']
+    saved_desc = state['saved_desc']
+    sid = next_saved_id(state)
+    saved_imgs[sid] = summary
+    sum_types = []
+    sum_tasks = []
+    # Get conn types and tasks
+    for c,sel in conn_types.items():
+        if sel:
+            sum_types.append(c)
+    for c,sel in conn_tasks.items():
+        if sel:
+            sum_tasks.append(c)
+    saved_desc[sid] = {'im_type': sum_im_type, 'types': sum_types, 'tasks': sum_tasks, 'groups': group_descs, 'nsubs': len(group_subs), 'nscans': len(ps)}
+    print(saved_desc)
+    summary = image.imshow(summary)
     state['content'] = 'Connectivity'
     state['to_update']['Connectivity'] = True
     state['conn_summary_img'] = summary
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
+# Connectivity panel
+@app.route('/image-math', methods=['POST'])
+def image_math_panel():
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    state['content'] = 'ImageMath'
+    state['to_update']['ImageMath'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
