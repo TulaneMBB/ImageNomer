@@ -92,19 +92,19 @@ Model Weights. We find that only a few SNPs are consistently chosen by bootstrap
 
 A paper describing the software and its use in finding an FC race confound has been published in Neuroimage: Reports. It is available <a href='https://doi.org/10.1016/j.ynirp.2023.100191'>open access</a>.
 
-@article{ORLICHENKO2023100191,
-title = {ImageNomer: Description of a functional connectivity and omics analysis tool and case study identifying a race confound},
-journal = {Neuroimage: Reports},
-volume = {3},
-number = {4},
-pages = {100191},
-year = {2023},
-issn = {2666-9560},
-doi = {https://doi.org/10.1016/j.ynirp.2023.100191},
-url = {https://www.sciencedirect.com/science/article/pii/S2666956023000363},
-author = {Anton Orlichenko and Grant Daly and Ziyu Zhou and Anqi Liu and Hui Shen and Hong-Wen Deng and Yu-Ping Wang},
-keywords = {fMRI, Functional connectivity, Software, Achievement score, Race confound, PNC dataset}
-}
+    @article{ORLICHENKO2023100191,
+        title = {ImageNomer: Description of a functional connectivity and omics analysis tool and case study identifying a race confound},
+        journal = {Neuroimage: Reports},
+        volume = {3},
+        number = {4},
+        pages = {100191},
+        year = {2023},
+        issn = {2666-9560},
+        doi = {https://doi.org/10.1016/j.ynirp.2023.100191},
+        url = {https://www.sciencedirect.com/science/article/pii/S2666956023000363},
+        author = {Anton Orlichenko and Grant Daly and Ziyu Zhou and Anqi Liu and Hui Shen and Hong-Wen Deng and Yu-Ping Wang},
+        keywords = {fMRI, Functional connectivity, Software, Achievement score, Race confound, PNC dataset}
+    }
 
 <a href='https://www.techrxiv.org/articles/preprint/ImageNomer_developing_an_fMRI_and_omics_visualization_tool_to_detect_racial_bias_in_functional_connectivity/21992006'>A preprint is available.</a>
 
