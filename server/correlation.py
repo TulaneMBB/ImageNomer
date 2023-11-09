@@ -1,6 +1,7 @@
 
 import numpy as np
 import scipy.stats as stats
+from sklearn.cross_decomposition import CCA
 from natsort import natsorted
 
 # My modules
@@ -80,6 +81,24 @@ def corr_feats(feat, var, typ='Pearson', bonf=True):
     p[p < 1e-5] = 1e-5
     return rho, np.log10(p), df
 
+def corr_feats_cca(feat, var):
+    feat = feat - np.mean(feat, axis=0, keepdims=True)
+    var = var - np.mean(var)
+    cca = CCA(n_components=1)
+    cca.fit(feat, var)
+    load = cca.x_loadings_
+    scalar = (feat@load).squeeze()
+    rho = np.corrcoef(var, scalar)[0,1]
+    n = feat.shape[0]
+    m = feat.shape[1]
+    df = n-2
+    t = rho*(df/(1-rho**2))**0.5
+    if t < 0:
+        t = -t
+    # Convert to 2-sided p value
+    p = (1-stats.t.cdf(t, df))*2
+    return load.squeeze(), rho, np.log10(p)
+
 # Create correlation matrix and p-value matrix
 # For connectivity versus phenotype
 
@@ -135,6 +154,7 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     #fcs = np.stack(fcs)
     # Get correlation and p-value
     rho, p, df = corr_feats(fcs, pheno)
+    _, rhocca, pcca = corr_feats_cca(fcs, pheno)
     rho = data.vec2mat(rho, fillones=False)
     p = data.vec2mat(p, fillones=False)
     # Save correlation for image math
@@ -143,7 +163,7 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     # Send image
     rimg = image.imshow(rho, colorbar=True)
     pimg = image.imshow(p, colorbar=True, reverse_cmap=True)
-    return rimg, pimg
+    return rimg, pimg, rhocca, df, pcca
 
 # Create pheno-pheno correlation image as well as statistics
 def corr_pheno_pheno(coh, df, query, field1, field2, cat=None):
