@@ -611,8 +611,8 @@ def get_correlation_plots():
             tasks = [t[0] for t in tasks if t[1] == typ and t[0] != 'All']
         else:
             tasks = [task]
-        state['corr_img'], state['corr_pval'], rho, df, pval = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, tasks, corr_pheno, corr_cat)
-        state['corr_stats'] = {'rho': decim(rho), 'df': df, 'pval': decim(pval)}
+        state['corr_img'], state['corr_pval'], df, tot_rho, tot_pval = correlation.corr_conn_pheno(sel_cohort['name'], sel_cohort_df, corr_group, typ, tasks, corr_pheno, corr_cat)
+        state['corr_stats'] = {'rho': decim(tot_rho), 'df': df, 'pval': decim(tot_pval)}
     else:
         state['corr_img'], rho, df, pval = correlation.corr_pheno_pheno(sel_cohort['name'], sel_cohort_df, corr_group, corr_pheno, corr_var, corr_cat)
         state['corr_pval'] = None

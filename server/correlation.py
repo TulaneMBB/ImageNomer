@@ -51,7 +51,7 @@ def corr_vars(a, b, typ='Pearson'):
 # p values assumes normality of input features
 # Default is to perform Bonferroni correction
 
-def corr_feats(feat, var, typ='Pearson', bonf=True):
+def corr_feats(feat, var, typ='Pearson', bonf=True, bonfMult=None):
     feat = feat - np.mean(feat, axis=0, keepdims=True)
     var = var - np.mean(var)
     if typ == 'Spearman':
@@ -75,12 +75,24 @@ def corr_feats(feat, var, typ='Pearson', bonf=True):
     p = (1-stats.t.cdf(t, df))*2
     # Bonferroni correction
     if bonf:
-        p *= m
+        p *= m if bonfMult is None else bonfMult
     # Clamp to prevent huge p values
     p[p > 1] = 1
     p[p < 1e-5] = 1e-5
-    return rho, np.log10(p), df
+    # Calculate add hoc total correlation and add hoc p value treating correlation vector as loading vector
+    # As in CCA below
+    scalar = feat@rho
+    tot_rho = np.corrcoef(var, scalar)[0,1]
+    tot_t = tot_rho*(df/(1-tot_rho**2))**0.5
+    if tot_t < 0:
+        ttot_t = -tot_t
+    # Convert to 2-sided p value
+    tot_p = (1-stats.t.cdf(tot_t, df))*2
+    return rho, np.log10(p), df, tot_rho, np.log10(tot_p)
 
+# Almost always significant
+# Loading vector is very similar to correlation vector
+# We don't use CCA because it is very slow for >5000 subjects with 264x264 connectivity matrices
 def corr_feats_cca(feat, var):
     feat = feat - np.mean(feat, axis=0, keepdims=True)
     var = var - np.mean(var)
@@ -155,8 +167,7 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
                     print(count)
     #fcs = np.stack(fcs)
     # Get correlation and p-value
-    rho, p, df = corr_feats(fcs, pheno)
-    _, rhocca, pcca = corr_feats_cca(fcs, pheno)
+    rho, p, df, tot_rho, tot_p = corr_feats(fcs, pheno)
     rho = data.vec2mat(rho, fillones=False)
     p = data.vec2mat(p, fillones=False)
     # Save correlation for image math
@@ -165,7 +176,7 @@ def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
     # Send image
     rimg = image.imshow(rho, colorbar=True)
     pimg = image.imshow(p, colorbar=True, reverse_cmap=True)
-    return rimg, pimg, rhocca, df, pcca
+    return rimg, pimg, df, tot_rho, tot_p
 
 # Create pheno-pheno correlation image as well as statistics
 def corr_pheno_pheno(coh, df, query, field1, field2, cat=None):
