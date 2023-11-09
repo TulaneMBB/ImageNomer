@@ -103,6 +103,8 @@ def corr_feats_cca(feat, var):
 # For connectivity versus phenotype
 
 def corr_conn_pheno(coh, df, query, typ, tasks, field, cat=None, ses=None):
+    print(tasks)
+    print(typ)
     group = df.index if query == 'All' else df.query(query).index
     # Get fcs and pheno
     # Fcs allocated later
