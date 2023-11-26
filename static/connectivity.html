@@ -30,7 +30,9 @@
     <div class='d-flex' style='flex-wrap: wrap;'>
         {% for conn_data in conns %}
         <div class='form-text' style='display: inline-block; text-align: center'>
-            <div>{{ conn_data[0] }}</div>
+            {% for data in conn_data[0] %}
+                <div>{{ data }}</div>
+            {% endfor %}
             <img style='width: 200px;' src='data:image/png;base64,{{ conn_data[1] }}'>
         </div>
         {% endfor %} 

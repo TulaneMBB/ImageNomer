@@ -271,6 +271,10 @@ def get_component(comp, idx):
                         break
                     else:
                         group_subs.update(sel_cohort_df.query(g['name']).index)
+            # Add individually selected subjects
+            for sub,sel in state['subs_checked'].items():
+                if sel:
+                    group_subs.add(sub)
             if len(group_subs) == 0:
                 return render_template('blank.html', error='No subjects selected')
             conns = []
@@ -285,7 +289,10 @@ def get_component(comp, idx):
                         continue
                     if conn_types[typ] and conn_tasks[task]:
                         conn = f'data/{sel_cohort["name"]}/conn/{f}'
-                        conns.append((sub, conn))
+                        conns.append(([f'{sub}, {typ}, {task}'], conn))
+                        for field,sel in conn_fields.items():
+                            if sel:
+                                conns[-1][0].append(f'{field}: {sel_cohort_df.loc[sub, field]}')
             # Render conns that fall on given page
             conns_page = []
             page = state['conn_page']
@@ -298,7 +305,6 @@ def get_component(comp, idx):
             count = 0
             for sub, conn in conns[(page-1)*nper:page*nper]:
                 count += 1
-                print(count)
                 p = np.load(conn)
                 p = data.vec2mat(p, fillones=False)
                 p = image.imshow(p, colorbar=False)
@@ -449,6 +455,8 @@ def change_subject_checked():
     subid = args['subid']
     subs_checked[subid] = False if subs_checked[subid] else True
     to_update['SubsList'] = True
+    if state['content'] == "Connectivity":
+        to_update['Connectivity'] = True
     with cv:
         cv.notify_all()
     return ('', 204)
@@ -780,6 +788,12 @@ def get_connectivity_mean():
             else:
                 group_subs.update(sel_cohort_df.query(g['name']).index)
                 group_descs.append(g['name'])
+    # Add individually selected subjects
+    for sub,sel in state['subs_checked'].items():
+        if sel and sub not in group_subs:
+            group_subs.add(sub)
+            if 'Indiviudally Selected' not in group_descs:
+                group_descs.append('Indiviudally Selected')
     if len(group_subs) == 0:
         print('No subjects selected')
         return ('', 204)
