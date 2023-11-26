@@ -53,7 +53,7 @@ def make_state():
     state['conn_fields'] = dict()
     state['conn_subs'] = []
     state['conn_page'] = 1
-    state['n_conn_per_page'] = 20
+    state['n_conn_per_page'] = 8
     state['conn_summary_img'] = None
 
     # Correlation content pane
@@ -258,7 +258,64 @@ def get_component(comp, idx):
                     conn_tasks[task] = True
                 for field in sel_cohort_df.columns:
                     conn_fields[field] = False
-            html = render_template('connectivity.html', summary_img=None, conn_types=conn_types, conn_tasks=conn_tasks, conn_fields=conn_fields)
+            # Get FCs for selected groups plus individual subjects
+            groups = state['groups']
+            if sel_cohort == None:
+                return render_template('blank.html', error='No cohort selected')
+            # Get subjects
+            group_subs = set()
+            for g in groups:
+                if g['sel']:
+                    if g['name'] == 'All':
+                        group_subs.update(sel_cohort_df.index)
+                        break
+                    else:
+                        group_subs.update(sel_cohort_df.query(g['name']).index)
+            if len(group_subs) == 0:
+                return render_template('blank.html', error='No subjects selected')
+            conns = []
+            # Sorts by subject since it's first field
+            for f in natsorted(sel_cohort['conn']):
+                m = re.match('(.*)_task-([^_]+)_?[^_]*_([^.]+)\.[^.]+$', f)
+                if m:
+                    sub = m.group(1)
+                    task = m.group(2)
+                    typ = m.group(3)
+                    if sub not in group_subs:
+                        continue
+                    if conn_types[typ] and conn_tasks[task]:
+                        conn = f'data/{sel_cohort["name"]}/conn/{f}'
+                        conns.append((sub, conn))
+            # Render conns that fall on given page
+            conns_page = []
+            page = state['conn_page']
+            nper = state['n_conn_per_page']
+            last = (len(conns)-1)//nper + 1
+            if page == 'Last':
+                page = last
+            if (page-1)*nper >= len(conns):
+                page = 1
+            count = 0
+            for sub, conn in conns[(page-1)*nper:page*nper]:
+                count += 1
+                print(count)
+                p = np.load(conn)
+                p = data.vec2mat(p, fillones=False)
+                p = image.imshow(p, colorbar=False)
+                conns_page.append((sub, p))
+            # Make pagination pages
+            start = page-2
+            end = page+2
+            if start < 1:
+                start = 1
+            if end > last:
+                end = last
+            has_prev = page != 1 and len(conns) > nper
+            has_next = page*nper < len(conns)
+            view_pages = list(range(start, end+1))
+            print(view_pages)
+            html = render_template('connectivity.html', summary_img=None, conn_types=conn_types, conn_tasks=conn_tasks, conn_fields=conn_fields, 
+                                   conns=conns_page, has_prev=has_prev, has_next=has_next, view_pages=view_pages)
             return html
         if comp == 'ImageMath':
             saved_eq = state['saved_eq']
@@ -489,6 +546,10 @@ def change_group_checked():
     to_update = state['to_update']
     groups[idx]['sel'] = not groups[idx]['sel']
     to_update['Phenotypes'] = True
+    if content == 'Connectivity':
+        to_update['Connectivity'] = True
+        with cv:
+            cv.notify_all()
     if content == 'Phenotypes':
         phenotypes_panel()
     return ('', 204)
@@ -635,6 +696,24 @@ def connectivity_panel():
         cv.notify_all()
     return ('', 204)
 
+# Connectivity panel pagination changed
+@app.route('/conn-page', methods=['POST'])
+def connectivity_page_changed():
+    args = request.form
+    my_client_idx = int(request.cookies.get('client_idx'))
+    global clients
+    state = clients[my_client_idx]
+    if args['page'] == 'First':
+        state['conn_page'] = 1
+    elif args['page'] == 'Last':
+        state['conn_page'] = 'Last'
+    else:
+        state['conn_page'] = int(args['page'])
+    state['to_update']['Connectivity'] = True
+    with cv:
+        cv.notify_all()
+    return ('', 204)
+
 # Connectivity panel checkbox selection changed
 @app.route('/conn-change-checked', methods=['POST'])
 def connectivity_checked_changed():
@@ -671,7 +750,7 @@ def connectivity_checked_changed():
         cv.notify_all()
     return ('', 204)
 
-# Connectivity mean image
+# Connectivity mean and std image
 @app.route('/conn-mean', methods=['POST'])
 def get_connectivity_mean():
     my_client_idx = int(request.cookies.get('client_idx'))

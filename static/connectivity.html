@@ -27,6 +27,40 @@
             </div>
             {% endfor %}
     </form>
+    <div class='d-flex' style='flex-wrap: wrap;'>
+        {% for conn_data in conns %}
+        <div class='form-text' style='display: inline-block; text-align: center'>
+            <div>{{ conn_data[0] }}</div>
+            <img style='width: 200px;' src='data:image/png;base64,{{ conn_data[1] }}'>
+        </div>
+        {% endfor %} 
+    </div>
+    <ul class="pagination justify-content-center">
+        {% if has_prev %}
+            <li class="page-item">
+                <form data-no-submit>
+                    <a class="page-link" href="#connectivity" hx-post='/conn-page' hx-swap='none'>&laquo;</a>
+                    <input type='hidden' name='page' value='First'>
+                </form>
+            </li>
+        {% endif %}
+        {% for page in view_pages %}
+            <li class="page-item">
+                <form data-no-submit>
+                    <a class="page-link" href="#connectivity" hx-post='/conn-page' hx-swap='none'>{{ page }}</a>
+                    <input type='hidden' name='page' value='{{ page }}'>
+                </form>
+            </li>
+        {% endfor %}
+        {% if has_next %}
+            <li class="page-item">
+                <form data-no-submit>
+                    <a class="page-link" href="#connectivity" hx-post='/conn-page' hx-swap='none'>&raquo;</a>
+                    <input type='hidden' name='page' value='Last'>
+                </form>
+            </li>
+        {% endif %}
+    </ul>
     <div class='d-flex'>
         <form data-no-submit>
             <input type='hidden' name='mean' value='true'>
