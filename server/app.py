@@ -491,7 +491,7 @@ def change_cohort():
     return ('', 204)
 
 def decim(v):
-    return "{:.2f}".format(v)
+    return "{:.3f}".format(v)
 
 # Overview pane
 @app.route('/overview', methods=['POST'])
@@ -514,10 +514,13 @@ def overview_panel():
             vals[sub] = val
             d = dict(name=col, size=len(vals))
             if isinstance(val, numbers.Number):
-                d['numeric'] = True
-                d['min'] = decim(min(vals.values()))
-                d['max'] = decim(max(vals.values()))
-                d['mean'] = decim(sum(vals.values())/len(vals))
+                try:
+                    d['numeric'] = True
+                    d['min'] = decim(min(vals.values()))
+                    d['max'] = decim(max(vals.values()))
+                    d['mean'] = decim(sum(vals.values())/len(vals))
+                except:
+                    print(f'Bad number for col {col}')
             else:
                 counts = dict()
                 for v in vals.values():
